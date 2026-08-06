@@ -1,9 +1,9 @@
 <?php
 
-namespace SeuUsuario\DomainGenerator;
+namespace Domain\DomainGenerator;
 
 use Illuminate\Support\ServiceProvider;
-use SeuUsuario\DomainGenerator\Commands\CreateDomainStructureCommand;
+use Domain\DomainGenerator\Commands\CreateDomainStructureCommand;
 
 class DomainGeneratorServiceProvider extends ServiceProvider
 {

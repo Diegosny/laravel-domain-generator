@@ -1,6 +1,6 @@
 <?php
 
-namespace SeuUsuario\DomainGenerator\Commands;
+namespace Domain\DomainGenerator\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
