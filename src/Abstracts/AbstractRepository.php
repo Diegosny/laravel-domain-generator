@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Abstracts;
+namespace Domain\DomainGenerator\Abstracts;
 
 use App\Interfaces\RepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;

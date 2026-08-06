@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Abstracts;
+namespace Domain\DomainGenerator\Abstracts;
 
 use App\Http\Controllers\Controller;
 use Closure;

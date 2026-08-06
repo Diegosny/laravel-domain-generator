@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Abstracts;
+namespace Domain\DomainGenerator\Abstracts;
 
 use App\Interfaces\ServiceInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
