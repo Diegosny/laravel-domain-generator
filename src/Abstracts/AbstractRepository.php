@@ -2,7 +2,7 @@
 
 namespace Domain\DomainGenerator\Abstracts;
 
-use App\DomainGenerator\Interfaces\RepositoryInterface;
+use Domain\DomainGenerator\Interfaces\RepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
