@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Interfaces;
+namespace Domain\DomainGenerator\Interfaces;
 
 interface ServiceInterface
 {

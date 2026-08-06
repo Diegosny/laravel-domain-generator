@@ -2,7 +2,7 @@
 
 namespace Domain\DomainGenerator\Abstracts;
 
-use App\Interfaces\ServiceInterface;
+use App\DomainGenerator\Interfaces\ServiceInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 
