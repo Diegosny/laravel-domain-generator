@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\File;
 
 class CreateDomainStructureCommand extends Command
 {
-    protected $signature = 'make:domain {name : O nome do modelo (ex: User)}';
+    protected $signature = 'make:domain {name : O nome do modelo (ex: User)} {--force : Forçar a criação mesmo se já existirem arquivos}';
 
     protected $description = 'Cria Model, Migration, Controller, Request padrão, Service e Repository para um novo domínio';
 
@@ -20,48 +20,64 @@ class CreateDomainStructureCommand extends Command
     public function handle()
     {
         $name = ucfirst($this->argument('name'));
-        $domainFolder = $this->getDomainFolder();
+        $force = $this->option('force');
 
         $this->info("Iniciando a criação da estrutura para o domínio: {$name}");
 
-        $this->createModelAndMigration($name);
-        $this->createController($name);
-        $this->createRequest($name);
-        $this->createService($name);
-        $this->createRepository($name);
+        $this->createModelAndMigration($name, $force);
+        $this->createController($name, $force);
+        $this->createRequest($name, $force);
+        $this->createService($name, $force);
+        $this->createRepository($name, $force);
 
         $this->newLine();
         $this->info("✨ Estrutura para {$name} criada com sucesso!");
     }
 
-    private function createModelAndMigration(string $name): void
+    private function createModelAndMigration(string $name, bool $force = false): void
     {
         $this->info("Criando Model e Migration para {$name}...");
-        Artisan::call('make:model', [
+
+        $params = [
             'name' => $name,
             '-m' => true,
-        ]);
+        ];
+
+        // A opção --force evita prompts interativos de confirmação do Laravel
+        if ($force) {
+            $params['--force'] = true;
+        }
+
+        Artisan::call('make:model', $params);
     }
 
-    private function createController(string $name): void
+    private function createController(string $name, bool $force = false): void
     {
         $controllerName = "{$name}Controller";
         $this->info("Criando Controller {$controllerName}...");
-        Artisan::call('make:controller', [
-            'name' => $controllerName,
-        ]);
+
+        $params = ['name' => $controllerName];
+        if ($force) {
+            $params['--force'] = true;
+        }
+
+        Artisan::call('make:controller', $params);
     }
 
-    private function createRequest(string $name): void
+    private function createRequest(string $name, bool $force = false): void
     {
         $requestName = "{$name}Request";
         $this->info("Criando Request {$requestName} em app/Http/Requests...");
-        Artisan::call('make:request', [
-            'name' => $requestName,
-        ]);
+
+        $params = ['name' => $requestName];
+        if ($force) {
+            $params['--force'] = true;
+        }
+
+        Artisan::call('make:request', $params);
     }
 
-    private function createService(string $name): void
+    private function createService(string $name, bool $force = false): void
     {
         $domainFolder = $this->getDomainFolder();
         $path = app_path("{$domainFolder}/{$name}/Service");
@@ -72,7 +88,7 @@ class CreateDomainStructureCommand extends Command
 
         $this->ensureDirectoryExists($path);
 
-        if (File::exists($fullPath)) {
+        if (File::exists($fullPath) && !$force) {
             $this->warn("O arquivo {$fileName} já existe. Ignorado.");
             return;
         }
@@ -80,9 +96,9 @@ class CreateDomainStructureCommand extends Command
         $template = <<<PHP
 <?php
 
-namespace App\\{$domainFolder}\\{$name}\Service;
+namespace App\\{$domainFolder}\\{$name}\\Service;
 
-use App\\{$domainFolder}\\{$name}\Repositories\\{$name}Repository;
+use App\\{$domainFolder}\\{$name}\\Repositories\\{$name}Repository;
 
 class {$name}Service
 {
@@ -95,7 +111,7 @@ PHP;
         File::put($fullPath, $template);
     }
 
-    private function createRepository(string $name): void
+    private function createRepository(string $name, bool $force = false): void
     {
         $domainFolder = $this->getDomainFolder();
         $path = app_path("{$domainFolder}/{$name}/Repositories");
@@ -106,7 +122,7 @@ PHP;
 
         $this->ensureDirectoryExists($path);
 
-        if (File::exists($fullPath)) {
+        if (File::exists($fullPath) && !$force) {
             $this->warn("O arquivo {$fileName} já existe. Ignorado.");
             return;
         }
@@ -114,9 +130,9 @@ PHP;
         $template = <<<PHP
 <?php
 
-namespace App\\{$domainFolder}\\{$name}\Repositories;
+namespace App\\{$domainFolder}\\{$name}\\Repositories;
 
-use App\Models\\{$name};
+use App\\Models\\{$name};
 
 class {$name}Repository
 {
