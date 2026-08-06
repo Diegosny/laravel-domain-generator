@@ -68,7 +68,7 @@ abstract class AbstractController extends BaseController
     public function update(Request $request, mixed $id): JsonResponse
     {
         return $this->handle(function () use ($request, $id) {
-            $validated = $this->validateUpdateRequest();
+            $validated = $this->validateUpdateRequest($request);
 
             DB::transaction(fn () => $this->service->update($id, $validated));
 
@@ -137,13 +137,19 @@ abstract class AbstractController extends BaseController
         return app($this->requestValidate)->validated();
     }
 
-    protected function validateUpdateRequest(): array
+    protected function validateUpdateRequest(Request $request): array
     {
-        if ($this->requestValidateUpdate === null) {
-            return [];
+        if ($this->requestValidateUpdate !== null) {
+            return app($this->requestValidateUpdate)->validated();
         }
 
-        return app($this->requestValidateUpdate)->validated();
+        // 2. Se não existir, usa a FormRequest de Store padrão (se configurada):
+        if ($this->requestValidate !== null) {
+            return app($this->requestValidate)->validated();
+        }
+
+        // 3. Se nenhuma FormRequest for definida no Controller, pega os dados enviados na requisição:
+        return $request->all();
     }
 
     // --- MÉTODOS DE FORMATAÇÃO DE RESPOSTA ---
