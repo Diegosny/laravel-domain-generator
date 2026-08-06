@@ -1,12 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\{{domain}};
+namespace App\Domain\{{domain}}\Controllers;
 
 use Domain\DomainGenerator\Abstracts\AbstractController;
+use App\Domain\{{domain}}\Service\{{domain}}Service;
 
 class {{domain}}Controller extends AbstractController
 {
-    public function __construct(
-        protected {{domain}}Service $service
-    ) {}
+    public function __construct(protected {{domain}}Service $service)
+    {
+        $this->service = $service;
+    }
 }
