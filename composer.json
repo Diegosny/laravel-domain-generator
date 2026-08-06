@@ -1,0 +1,35 @@
+{
+  "name": "domain/laravel-domain-generator",
+  "description": "Pacote Artisan para geracao automatica de estrutura por Dominio com Abstract Controllers, Services e Repositories",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Diego Silva",
+      "email": "diegocamilo021@gmail.com"
+    }
+  ],
+  "require": {
+    "php": "^8.1",
+    "illuminate/support": "^10.0|^11.0|^12.0",
+    "illuminate/console": "^10.0|^11.0|^12.0",
+    "illuminate/database": "^10.0|^11.0|^12.0",
+    "illuminate/http": "^10.0|^11.0|^12.0",
+    "illuminate/routing": "^10.0|^11.0|^12.0",
+    "symfony/http-foundation": "^6.0|^7.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Domain\\DomainGenerator\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Domain\\DomainGenerator\\DomainGeneratorServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
