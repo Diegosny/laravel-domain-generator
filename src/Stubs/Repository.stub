@@ -1,0 +1,10 @@
+<?php
+
+namespace App\Repositories\{{domain}};
+
+use Domain\DomainGenerator\Abstracts\AbstractRepository;
+
+class {{domain}}Repository extends AbstractRepository
+{
+    //
+}
