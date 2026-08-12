@@ -2,11 +2,19 @@
 
 namespace Domain\DomainGenerator;
 
-use Illuminate\Support\ServiceProvider;
+use Domain\DomainGenerator\Commands\CreateDomainStructureCommand;
+use Domain\DomainGenerator\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
+use PHPOpenSourceSaver\JWTAuth\Providers\LaravelServiceProvider as JwtServiceProvider;
 
 class DomainGeneratorServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        $this->app->register(JwtServiceProvider::class);
+    }
+
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
@@ -14,7 +22,7 @@ class DomainGeneratorServiceProvider extends ServiceProvider
                 CreateDomainStructureCommand::class,
             ]);
         }
-        
+
         $this->registerRoutes();
     }
 
@@ -24,10 +32,10 @@ class DomainGeneratorServiceProvider extends ServiceProvider
             'prefix' => 'api/auth',
             'middleware' => 'api',
         ], function () {
-            Route::post('login', [\Domain\DomainGenerator\Http\Controllers\AuthController::class, 'login']);
-            Route::post('logout', [\Domain\DomainGenerator\Http\Controllers\AuthController::class, 'logout'])->middleware('auth:api');
-            Route::post('refresh', [\Domain\DomainGenerator\Http\Controllers\AuthController::class, 'refresh'])->middleware('auth:api');
-            Route::get('me', [\Domain\DomainGenerator\Http\Controllers\AuthController::class, 'me'])->middleware('auth:api');
+            Route::post('login', [AuthController::class, 'login']);
+            Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api');
+            Route::post('refresh', [AuthController::class, 'refresh'])->middleware('auth:api');
+            Route::get('me', [AuthController::class, 'me'])->middleware('auth:api');
         });
     }
 }
