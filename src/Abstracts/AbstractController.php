@@ -3,12 +3,14 @@
 namespace Domain\DomainGenerator\Abstracts;
 
 use Closure;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\UnauthorizedException;
@@ -37,6 +39,8 @@ abstract class AbstractController extends BaseController
 
     protected mixed $service;
 
+    protected ?string $resource = null;
+
     protected ?string $requestValidate = null;
 
     protected ?string $requestValidateUpdate = null;
@@ -44,8 +48,6 @@ abstract class AbstractController extends BaseController
     protected string $messageSuccessDefault = 'Operação realizada com sucesso';
 
     protected string $messageErrorDefault = 'Ops';
-
-    protected ?string $resource = null;
 
     public function index(Request $request): JsonResponse
     {
@@ -143,12 +145,10 @@ abstract class AbstractController extends BaseController
             return app($this->requestValidateUpdate)->validated();
         }
 
-        // 2. Se não existir, usa a FormRequest de Store padrão (se configurada):
         if ($this->requestValidate !== null) {
             return app($this->requestValidate)->validated();
         }
 
-        // 3. Se nenhuma FormRequest for definida no Controller, pega os dados enviados na requisição:
         return $request->all();
     }
 
@@ -158,12 +158,16 @@ abstract class AbstractController extends BaseController
         mixed $items = [],
         int $status = Response::HTTP_OK
     ): JsonResponse {
-        return $this->jsonResponse([
+        $payload = [
             self::KEY_TYPE => self::TYPE_SUCCESS,
             self::KEY_STATUS => $status,
-            self::KEY_DATA => $items,
             self::KEY_SHOW => false,
-        ], $status);
+        ];
+
+        return $this->jsonResponse(
+            array_merge($payload, $this->toArrayPayload($items)),
+            $status
+        );
     }
 
     public function error(
@@ -232,26 +236,45 @@ abstract class AbstractController extends BaseController
 
     protected function toArrayPayload(mixed $payload): array
     {
+        if (empty($payload)) {
+            return [];
+        }
+
+        // 1. Se um Resource foi definido no Controller
         if ($this->resource !== null && class_exists($this->resource)) {
             $resourceClass = $this->resource;
 
-            if ($payload instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
+            if ($payload instanceof LengthAwarePaginator) {
                 return $resourceClass::collection($payload)->response()->getData(true);
             }
 
-            if ($payload instanceof \Illuminate\Support\Collection) {
-                return $resourceClass::collection($payload)->resolve();
+            if ($payload instanceof Collection) {
+                return [self::KEY_DATA => $resourceClass::collection($payload)->resolve()];
             }
 
-            if (is_object($payload) || is_array($payload)) {
-                return (new $resourceClass($payload))->resolve();
-            }
+            return [self::KEY_DATA => (new $resourceClass($payload))->resolve()];
         }
 
-        if ($payload instanceof Arrayable) {
+        // 2. Se for um Paginator nativo do Eloquent
+        if ($payload instanceof LengthAwarePaginator) {
             return $payload->toArray();
         }
 
-        return is_array($payload) ? $payload : [];
+        // 3. Se for um Array contendo chaves de paginação (fallback caso já venha formatado)
+        if (is_array($payload) && isset($payload['data']) && (isset($payload['current_page']) || isset($payload['total']))) {
+            return $payload;
+        }
+
+        // 4. Se for Arrayable (Model, Collection, etc.)
+        if ($payload instanceof Arrayable) {
+            return [self::KEY_DATA => $payload->toArray()];
+        }
+
+        // 5. Se já for um array associativo contendo a chave 'data'
+        if (is_array($payload) && array_key_exists(self::KEY_DATA, $payload)) {
+            return $payload;
+        }
+
+        return [self::KEY_DATA => is_array($payload) ? $payload : []];
     }
 }
