@@ -45,12 +45,12 @@ abstract class AbstractController extends BaseController
 
     protected string $messageErrorDefault = 'Ops';
 
+    protected ?string $resource = null;
+
     public function index(Request $request): JsonResponse
     {
         return $this->handle(
-            fn () => $this->service
-                ->getAll($request->all(), $this->resolveWith($request))
-                ->toArray()
+            fn () => $this->service->getAll($request->all(), $this->resolveWith($request))
         );
     }
 
@@ -79,7 +79,7 @@ abstract class AbstractController extends BaseController
     public function show(mixed $id, Request $request): JsonResponse
     {
         return $this->handle(
-            fn () => $this->service->find($id, $this->resolveWith($request))->toArray()
+            fn () => $this->service->find($id, $this->resolveWith($request))
         );
     }
 
@@ -232,6 +232,22 @@ abstract class AbstractController extends BaseController
 
     protected function toArrayPayload(mixed $payload): array
     {
+        if ($this->resource !== null && class_exists($this->resource)) {
+            $resourceClass = $this->resource;
+
+            if ($payload instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
+                return $resourceClass::collection($payload)->response()->getData(true);
+            }
+
+            if ($payload instanceof \Illuminate\Support\Collection) {
+                return $resourceClass::collection($payload)->resolve();
+            }
+
+            if (is_object($payload) || is_array($payload)) {
+                return (new $resourceClass($payload))->resolve();
+            }
+        }
+
         if ($payload instanceof Arrayable) {
             return $payload->toArray();
         }
