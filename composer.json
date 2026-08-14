@@ -1,6 +1,6 @@
 {
   "name": "domain/laravel-domain-generator",
-  "description": "Pacote Artisan para geracao automatica de estrutura por Dominio com Abstract Controllers, Services e Repositories",
+  "description": "Pacote Laravel para geração automática de estruturas por domínio utilizando DDD, DTOs, Services, Repositories, Controllers e Form Requests",
   "type": "library",
   "license": "MIT",
   "authors": [

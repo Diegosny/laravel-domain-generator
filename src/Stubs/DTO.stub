@@ -1,11 +1,9 @@
-$template = <<<PHP
 <?php
 
-namespace {$namespace};
+namespace App\{{ domainFolder }}\{{ name }}\DTO;
 
-use Domain\\DomainGenerator\\Abstracts\\AbstractDTO;
+use Domain\DomainGenerator\Abstracts\AbstractDTO;
 
-final class {$name}DTO extends AbstractDTO
+final class {{ name }}DTO extends AbstractDTO
 {
 }
-PHP;

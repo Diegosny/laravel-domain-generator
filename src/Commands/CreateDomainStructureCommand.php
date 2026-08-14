@@ -19,10 +19,15 @@ class CreateDomainStructureCommand extends Command
      */
     private function getDomainFolder(): string
     {
-        return env(
-            'APP_DOMAIN_FOLDER',
-            'Domain'
-        );
+        return env('APP_DOMAIN_FOLDER', 'Domain');
+    }
+
+    /**
+     * Retorna o diretório dos stubs.
+     */
+    private function getStubsPath(): string
+    {
+        return dirname(__DIR__) . '/Stubs';
     }
 
     /**
@@ -42,49 +47,31 @@ class CreateDomainStructureCommand extends Command
 
         $this->newLine();
 
-        /*
-         * Model + Migration
-         */
         $this->createModelAndMigration(
             $name,
             $force
         );
 
-        /*
-         * Controller
-         */
         $this->createController(
             $name,
             $force
         );
 
-        /*
-         * Request
-         */
         $this->createRequest(
             $name,
             $force
         );
 
-        /*
-         * DTO
-         */
         $this->createDto(
             $name,
             $force
         );
 
-        /*
-         * Service
-         */
         $this->createService(
             $name,
             $force
         );
 
-        /*
-         * Repository
-         */
         $this->createRepository(
             $name,
             $force
@@ -100,7 +87,7 @@ class CreateDomainStructureCommand extends Command
     }
 
     /**
-     * Cria Model e Migration.
+     * Cria Model e Migration utilizando os generators nativos do Laravel.
      */
     private function createModelAndMigration(
         string $name,
@@ -163,45 +150,20 @@ class CreateDomainStructureCommand extends Command
             return;
         }
 
-        $namespace = 'App\\Http\\Controllers';
+        $stub = $this->loadStub('controller.stub');
 
-        $serviceNamespace =
-            "App\\{$domainFolder}\\{$name}\\Service";
-
-        $dtoNamespace =
-            "App\\{$domainFolder}\\{$name}\\DTO";
-
-        $requestNamespace =
-            'App\\Http\\Requests';
-
-        $template = <<<PHP
-<?php
-
-namespace {$namespace};
-
-use {$serviceNamespace}\\{$name}Service;
-use {$requestNamespace}\\{$name}Request;
-use {$dtoNamespace}\\{$name}DTO;
-use Domain\\DomainGenerator\\Abstracts\\AbstractController;
-
-class {$controllerName} extends AbstractController
-{
-    protected mixed \$service;
-
-    protected ?string \$requestValidate = {$name}Request::class;
-
-    protected ?string \$requestDto = {$name}DTO::class;
-
-    public function __construct({$name}Service \$service)
-    {
-        \$this->service = \$service;
-    }
-}
-PHP;
+        $content = $this->replaceStubVariables(
+            $stub,
+            [
+                'name' => $name,
+                'controller' => $controllerName,
+                'domainFolder' => $domainFolder,
+            ]
+        );
 
         File::put(
             $fullPath,
-            $template
+            $content
         );
     }
 
@@ -215,7 +177,7 @@ PHP;
         $requestName = "{$name}Request";
 
         $this->info(
-            "Criando Request {$requestName} em app/Http/Requests..."
+            "Criando Request {$requestName}..."
         );
 
         $params = [
@@ -252,7 +214,7 @@ PHP;
         $fullPath = "{$path}/{$fileName}";
 
         $this->info(
-            "Criando DTO {$fileName} em app/{$domainFolder}/{$name}/DTO..."
+            "Criando DTO {$fileName}..."
         );
 
         $this->ensureDirectoryExists($path);
@@ -268,27 +230,19 @@ PHP;
             return;
         }
 
-        $namespace =
-            "App\\{$domainFolder}\\{$name}\\DTO";
+        $stub = $this->loadStub('dto.stub');
 
-        $template = <<<PHP
-<?php
-
-namespace {$namespace};
-
-use Domain\\DomainGenerator\\Abstracts\\AbstractDTO;
-
-final class {$name}DTO extends AbstractDTO
-{
-    public function __construct()
-    {
-    }
-}
-PHP;
+        $content = $this->replaceStubVariables(
+            $stub,
+            [
+                'name' => $name,
+                'domainFolder' => $domainFolder,
+            ]
+        );
 
         File::put(
             $fullPath,
-            $template
+            $content
         );
     }
 
@@ -310,7 +264,7 @@ PHP;
         $fullPath = "{$path}/{$fileName}";
 
         $this->info(
-            "Criando Service {$fileName} em app/{$domainFolder}/{$name}/Service..."
+            "Criando Service {$fileName}..."
         );
 
         $this->ensureDirectoryExists($path);
@@ -326,32 +280,19 @@ PHP;
             return;
         }
 
-        $serviceNamespace =
-            "App\\{$domainFolder}\\{$name}\\Service";
+        $stub = $this->loadStub('service.stub');
 
-        $repositoryNamespace =
-            "App\\{$domainFolder}\\{$name}\\Repositories";
-
-        $template = <<<PHP
-<?php
-
-namespace {$serviceNamespace};
-
-use {$repositoryNamespace}\\{$name}Repository;
-use Domain\\DomainGenerator\\Abstracts\\AbstractService;
-
-class {$name}Service extends AbstractService
-{
-    public function __construct({$name}Repository \$repository)
-    {
-        \$this->repository = \$repository;
-    }
-}
-PHP;
+        $content = $this->replaceStubVariables(
+            $stub,
+            [
+                'name' => $name,
+                'domainFolder' => $domainFolder,
+            ]
+        );
 
         File::put(
             $fullPath,
-            $template
+            $content
         );
     }
 
@@ -373,7 +314,7 @@ PHP;
         $fullPath = "{$path}/{$fileName}";
 
         $this->info(
-            "Criando Repository {$fileName} em app/{$domainFolder}/{$name}/Repositories..."
+            "Criando Repository {$fileName}..."
         );
 
         $this->ensureDirectoryExists($path);
@@ -389,33 +330,58 @@ PHP;
             return;
         }
 
-        $repositoryNamespace =
-            "App\\{$domainFolder}\\{$name}\\Repositories";
+        $stub = $this->loadStub('repository.stub');
 
-        $modelNamespace =
-            'App\\Models';
-
-        $template = <<<PHP
-<?php
-
-namespace {$repositoryNamespace};
-
-use {$modelNamespace}\\{$name};
-use Domain\\DomainGenerator\\Abstracts\\AbstractRepository;
-
-class {$name}Repository extends AbstractRepository
-{
-    public function __construct({$name} \$model)
-    {
-        parent::__construct(\$model);
-    }
-}
-PHP;
+        $content = $this->replaceStubVariables(
+            $stub,
+            [
+                'name' => $name,
+                'domainFolder' => $domainFolder,
+            ]
+        );
 
         File::put(
             $fullPath,
-            $template
+            $content
         );
+    }
+
+    /**
+     * Carrega um stub da biblioteca.
+     */
+    private function loadStub(string $stub): string
+    {
+        $path = $this->getStubsPath() . "/{$stub}";
+
+        if (! File::exists($path)) {
+            throw new \RuntimeException(
+                "Stub não encontrado: {$path}"
+            );
+        }
+
+        return File::get($path);
+    }
+
+    /**
+     * Substitui as variáveis existentes no stub.
+     */
+    private function replaceStubVariables(
+        string $stub,
+        array $variables
+    ): string {
+        foreach ($variables as $key => $value) {
+            $stub = str_replace(
+                [
+                    '{{ ' . $key . ' }}',
+                    '{{' . $key . '}}',
+                    '$' . strtoupper($key),
+                ],
+                $value,
+                $stub
+            );
+        }
+
+        return $stub;
     }
 
     /**
@@ -434,7 +400,7 @@ PHP;
     }
 
     /**
-     * Exibe o output de comandos Artisan executados internamente.
+     * Exibe o output do comando Artisan executado.
      */
     private function outputCommandOutput(): void
     {
