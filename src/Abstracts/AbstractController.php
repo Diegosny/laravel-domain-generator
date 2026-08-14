@@ -534,70 +534,54 @@ abstract class AbstractController extends BaseController
     /**
      * Convert response payload into the expected API structure.
      */
-    protected function toArrayPayload(
-        mixed $payload
-    ): array {
-        if (empty($payload)) {
-            return [];
+/**
+ * Convert response payload into the expected API structure.
+ */
+    protected function toArrayPayload(mixed $payload): array
+    {
+        /**
+         * 1. Eloquent paginator (preserva meta de paginação)
+         */
+        if ($payload instanceof LengthAwarePaginator) {
+            if ($this->resource !== null && class_exists($this->resource)) {
+                $resourceClass = $this->resource;
+
+                return $resourceClass::collection($payload)
+                    ->response()
+                    ->getData(true);
+            }
+
+            return $payload->toArray();
         }
 
-        /*
-         * 1. Resource configured on Controller.
+        /**
+         * 2. Resource configurado no Controller
          */
-        if (
-            $this->resource !== null &&
-            class_exists($this->resource)
-        ) {
+        if ($this->resource !== null && class_exists($this->resource)) {
             $resourceClass = $this->resource;
-
-            if ($payload instanceof LengthAwarePaginator) {
-                return $resourceClass::collection(
-                    $payload
-                )->response()->getData(true);
-            }
 
             if ($payload instanceof Collection) {
                 return [
-                    self::KEY_DATA =>
-                        $resourceClass::collection(
-                            $payload
-                        )->resolve(),
+                    self::KEY_DATA => $resourceClass::collection($payload)->resolve(),
                 ];
             }
 
             return [
-                self::KEY_DATA =>
-                    (new $resourceClass(
-                        $payload
-                    ))->resolve(),
+                self::KEY_DATA => (new $resourceClass($payload))->resolve(),
             ];
         }
 
-        /*
-         * 2. Native Eloquent paginator.
+        /**
+         * 3. Collections
          */
-        if ($payload instanceof LengthAwarePaginator) {
-            return $payload->toArray();
+        if ($payload instanceof Collection) {
+            return [
+                self::KEY_DATA => $payload->toArray(),
+            ];
         }
 
-        /*
-         * 3. Already formatted pagination array.
-         */
-        if (
-            is_array($payload) &&
-            isset($payload[self::KEY_DATA]) &&
-            (
-                isset($payload['current_page']) ||
-                isset($payload['total'])
-            )
-        ) {
-            return $payload;
-        }
-
-        /*
-         * 4. Arrayable object.
-         *
-         * This includes DTOs, Models and Collections.
+        /**
+         * 4. Models, DTOs e outros Arrayable
          */
         if ($payload instanceof Arrayable) {
             return [
@@ -605,26 +589,48 @@ abstract class AbstractController extends BaseController
             ];
         }
 
-        /*
-         * 5. Already formatted data payload.
+        /**
+         * 5. Paginação já formatada
          */
         if (
             is_array($payload) &&
-            array_key_exists(
-                self::KEY_DATA,
-                $payload
-            )
+            isset($payload[self::KEY_DATA]) &&
+            (isset($payload['current_page']) || isset($payload['total']))
         ) {
             return $payload;
         }
 
-        /*
-         * 6. Default response.
+        /**
+         * 6. Array já no formato esperado
+         */
+        if (
+            is_array($payload) &&
+            array_key_exists(self::KEY_DATA, $payload)
+        ) {
+            return $payload;
+        }
+
+        /**
+         * 7. Arrays simples
+         */
+        if (is_array($payload)) {
+            return [
+                self::KEY_DATA => $payload,
+            ];
+        }
+
+        /**
+         * 8. Valores nulos
+         */
+        if ($payload === null) {
+            return [];
+        }
+
+        /**
+         * 9. Fallback
          */
         return [
-            self::KEY_DATA => is_array($payload)
-                ? $payload
-                : [],
+            self::KEY_DATA => $payload,
         ];
     }
 }
