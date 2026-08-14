@@ -103,7 +103,7 @@ abstract class AbstractController extends BaseController
     {
         return $this->handle(
             fn () => $this->service->getAll(
-                $request->all(),
+                $request->query(),
                 $this->resolveWith($request)
             )
         );
@@ -242,15 +242,18 @@ abstract class AbstractController extends BaseController
     /**
      * Resolve relationships from request.
      */
-    protected function resolveWith(
-        Request $request
-    ): array|string {
-        return $request->input(
-            'with',
-            $this->with
-        );
-    }
+    protected function resolveWith(Request $request): array
+    {
+        $requestWith = $request->query('with', []);
 
+        if (is_string($requestWith)) {
+            $requestWith = $requestWith === ''
+                ? []
+                : explode(',', $requestWith);
+        }
+
+        return array_values(array_unique(array_merge($this->with, $requestWith)));
+    }
     /**
      * Validate store request and optionally convert it to DTO.
      */
