@@ -268,7 +268,7 @@ abstract class AbstractRepository implements RepositoryInterface
         $relations = is_string($with)
             ? ($with === '' ? [] : explode(',', $with))
             : $with;
-
+    
         return collect($relations)
             ->filter(fn ($relation) => method_exists($this->model, $relation))
             ->values()
