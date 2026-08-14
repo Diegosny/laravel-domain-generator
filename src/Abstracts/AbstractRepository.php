@@ -263,15 +263,15 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Normalize relationship list.
      */
-    protected function normalizeWith(
-        array|string $with
-    ): array {
-        if (is_string($with)) {
-            return $with === ''
-                ? []
-                : explode(',', $with);
-        }
-
-        return $with;
+    protected function normalizeWith(array|string $with): array
+    {
+        $relations = is_string($with)
+            ? ($with === '' ? [] : explode(',', $with))
+            : $with;
+    
+        return collect($relations)
+            ->filter(fn ($relation) => method_exists($this->model, $relation))
+            ->values()
+            ->all();
     }
 }
