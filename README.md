@@ -1,6 +1,6 @@
 # Laravel Domain Generator
 
-[![Latest Stable Version](https://img.shields.io/badge/version-v1.0.14-blue.svg)](https://github.com/SEU_USUARIO/laravel-domain-generator)
+[![Latest Stable Version](https://img.shields.io/badge/version-v1.0.17-blue.svg)](https://github.com/SEU_USUARIO/laravel-domain-generator)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 O **Laravel Domain Generator** é um pacote para Laravel desenvolvido para automatizar e padronizar a criação de estruturas baseadas em **Domain Driven Design (DDD)** e **Clean Architecture**.
