@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Domain\{{domain}}\Service;
+namespace {{namespace}};
 
+use {{repositoryNamespace}}\{{repository}};
 use Domain\DomainGenerator\Abstracts\AbstractService;
-use App\Domain\{{domain}}\Repositories\{{domain}}Repository;
 
-class {{domain}}Service extends AbstractService
+class {{class}} extends AbstractService
 {
-    public function __construct(protected {{domain}}Repository $repository)
-    {
-        $this->repository = $repository;
+    public function __construct(
+        protected {{repository}} $repository
+    ) {
     }
 }

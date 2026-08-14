@@ -1,14 +1,17 @@
 <?php
 
-namespace App\Domain\{{domain}}\Controllers;
+namespace {{namespace}};
 
+use {{serviceNamespace}}\{{service}};
+use {{requestNamespace}}\{{request}};
+use {{dtoNamespace}}\{{dto}};
 use Domain\DomainGenerator\Abstracts\AbstractController;
-use App\Domain\{{domain}}\Service\{{domain}}Service;
 
-class {{domain}}Controller extends AbstractController
+class {{class}} extends AbstractController
 {
-    public function __construct(protected {{domain}}Service $service)
-    {
-        $this->service = $service;
-    }
+    protected mixed $service = {{service}}::class;
+
+    protected ?string $requestValidate = {{request}}::class;
+
+    protected ?string $requestDto = {{dto}}::class;
 }

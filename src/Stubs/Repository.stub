@@ -1,15 +1,14 @@
 <?php
 
-namespace App\Domain\{{domain}}\Repositories;
+namespace {{namespace}};
 
+use {{modelNamespace}}\{{model}};
 use Domain\DomainGenerator\Abstracts\AbstractRepository;
-use App\Models\{{domain}};
 
-class {{domain}}Repository extends AbstractRepository
+class {{class}} extends AbstractRepository
 {
-    public function __construct({{domain}} $model)
+    public function __construct({{model}} $model)
     {
-        $this->model = new {{domain}}();
+        parent::__construct($model);
     }
-
 }

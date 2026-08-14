@@ -11,39 +11,73 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 abstract class AbstractRepository implements RepositoryInterface
 {
+    /**
+     * Default field used when the identifier is a string.
+     */
     protected string $idField = 'hash';
+
+    /**
+     * Eloquent model.
+     */
     protected Model $model;
 
-
+    /**
+     * Create repository.
+     */
     public function __construct(Model $model)
     {
         $this->model = $model;
     }
 
+    /**
+     * Get repository model.
+     */
     public function getModel(): Model
     {
         return $this->model;
     }
 
+    /**
+     * Create a new Eloquent query.
+     */
     protected function newQuery(): Builder
     {
         return $this->getModel()->newQuery();
     }
 
-    public function all(array $filters = [], array|string $with = [], int $perPage = 10): LengthAwarePaginator
-    {
-        $query = $this->newQuery()->with($this->normalizeWith($with));
+    /**
+     * Get paginated records.
+     */
+    public function all(
+        array $filters = [],
+        array|string $with = [],
+        int $perPage = 10
+    ): LengthAwarePaginator {
+        $query = $this->newQuery()
+            ->with(
+                $this->normalizeWith($with)
+            );
 
         if ($clean = $this->cleanFilters($filters)) {
             $query->where($clean);
         }
 
-        return $query->paginate($perPage)->withQueryString();
+        return $query
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
-    public function allWithoutPaginate(array $filters = [], array|string $with = []): Collection
-    {
-        $query = $this->newQuery()->with($this->normalizeWith($with));
+    /**
+     * Get all records without pagination.
+     */
+    public function allWithoutPaginate(
+        array $filters = [],
+        array|string $with = []
+    ): Collection {
+        $query = $this->newQuery()
+            ->with(
+                $this->normalizeWith($with)
+            );
 
         if ($clean = $this->cleanFilters($filters)) {
             $query->where($clean);
@@ -52,85 +86,190 @@ abstract class AbstractRepository implements RepositoryInterface
         return $query->get();
     }
 
-    public function list(string $pluckValue = 'name', string $pluckKey = 'id', string $sortBy = 'name'): array
-    {
+    /**
+     * Get a key/value list.
+     */
+    public function list(
+        string $pluckValue = 'name',
+        string $pluckKey = 'id',
+        string $sortBy = 'name'
+    ): array {
         return $this->newQuery()
             ->orderBy($sortBy)
-            ->pluck($pluckValue, $pluckKey)
+            ->pluck(
+                $pluckValue,
+                $pluckKey
+            )
             ->all();
     }
 
+    /**
+     * Create a new model.
+     */
     public function create(array $data): Model
     {
         return $this->getModel()->create($data);
     }
 
-    public function find(int|string $id, array|string $with = []): ?Model
-    {
+    /**
+     * Find a model by ID or configured string identifier.
+     */
+    public function find(
+        int|string $id,
+        array|string $with = []
+    ): ?Model {
+        $query = $this->newQuery()
+            ->with(
+                $this->normalizeWith($with)
+            );
+
         if (is_numeric($id)) {
-            return $this->newQuery()->with($this->normalizeWith($with))->find($id);
+            return $query->find($id);
         }
 
-        return $this->findOneWhere([$this->idField => $id], $with);
+        return $query
+            ->where($this->idField, $id)
+            ->first();
     }
 
-    public function findOrFail(int|string $id, array|string $with = []): Model
-    {
-        $model = $this->find($id, $with);
+    /**
+     * Find a model or throw an exception.
+     */
+    public function findOrFail(
+        int|string $id,
+        array|string $with = []
+    ): Model {
+        $model = $this->find(
+            $id,
+            $with
+        );
 
         if (! $model) {
-            throw (new ModelNotFoundException)->setModel(get_class($this->getModel()), [$id]);
+            throw (new ModelNotFoundException)
+                ->setModel(
+                    get_class($this->getModel()),
+                    [$id]
+                );
         }
 
         return $model;
     }
 
-    public function delete(int|string $id): bool
-    {
-        return (bool) $this->findOrFail($id)->delete();
+    /**
+     * Delete model by ID.
+     */
+    public function delete(
+        int|string $id
+    ): bool {
+        return (bool) $this
+            ->findOrFail($id)
+            ->delete();
     }
 
-    public function update(Model $entity, array $data): Model
-    {
-        $entity->fill($data)->save();
+    /**
+     * Update an existing model.
+     */
+    public function update(
+        Model $entity,
+        array $data
+    ): Model {
+        $entity
+            ->fill($data)
+            ->save();
 
         return $entity;
     }
 
-    public function where(array $conditions, array|string $with = []): Collection
-    {
-        return $this->newQuery()->where($conditions)->with($this->normalizeWith($with))->get();
+    /**
+     * Get records by conditions.
+     */
+    public function where(
+        array $conditions,
+        array|string $with = []
+    ): Collection {
+        return $this->newQuery()
+            ->where($conditions)
+            ->with(
+                $this->normalizeWith($with)
+            )
+            ->get();
     }
 
-    public function deleteWhere(array $conditions): int
-    {
-        return $this->newQuery()->where($conditions)->delete();
+    /**
+     * Delete records by conditions.
+     */
+    public function deleteWhere(
+        array $conditions
+    ): int {
+        return $this->newQuery()
+            ->where($conditions)
+            ->delete();
     }
 
-    public function findOneWhere(array $conditions, array|string $with = []): ?Model
-    {
-        return $this->newQuery()->where($conditions)->with($this->normalizeWith($with))->first();
+    /**
+     * Find first record matching conditions.
+     */
+    public function findOneWhere(
+        array $conditions,
+        array|string $with = []
+    ): ?Model {
+        return $this->newQuery()
+            ->where($conditions)
+            ->with(
+                $this->normalizeWith($with)
+            )
+            ->first();
     }
 
-    public function updateOrCreate(array $attributes, array $values = []): Model
-    {
-        return $this->getModel()->updateOrCreate($attributes, $values);
+    /**
+     * Update or create model.
+     */
+    public function updateOrCreate(
+        array $attributes,
+        array $values = []
+    ): Model {
+        return $this->getModel()
+            ->updateOrCreate(
+                $attributes,
+                $values
+            );
     }
 
-    protected function cleanFilters(array $filters): array
-    {
-        $ignored = ['page', 'per_page', 'with', 'sort', 'order', 'search'];
+    /**
+     * Remove technical fields from filters.
+     */
+    protected function cleanFilters(
+        array $filters
+    ): array {
+        $ignored = [
+            'page',
+            'per_page',
+            'with',
+            'sort',
+            'order',
+            'search',
+        ];
 
         return collect($filters)
             ->except($ignored)
-            ->filter(fn ($value) => $value !== null && $value !== '')
+            ->filter(
+                fn ($value) =>
+                    $value !== null &&
+                    $value !== ''
+            )
             ->all();
     }
 
-    protected function normalizeWith(array|string $with): array
-    {
+    /**
+     * Normalize relationship list.
+     */
+    protected function normalizeWith(
+        array|string $with
+    ): array {
         if (is_string($with)) {
-            return $with === '' ? [] : explode(',', $with);
+            return $with === ''
+                ? []
+                : explode(',', $with);
         }
 
         return $with;
