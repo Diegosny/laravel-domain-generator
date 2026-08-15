@@ -11,13 +11,10 @@ class CreateDomainStructureCommand extends Command
 {
     protected $signature = 'make:domain
                             {name : O nome do domínio (ex: User)}
-                            {--force : Forçar a criação mesmo se já existirem arquivos}';
+                            {--force : Forçar criação de arquivos existentes}';
 
-    protected $description = 'Cria Model, Migration, Controller, Request, DTO, Service e Repository para um novo domínio';
+    protected $description = 'Cria a estrutura base de um domínio.';
 
-    /**
-     * Retorna a pasta base dos domínios.
-     */
     private function getDomainFolder(): string
     {
         return config(
@@ -26,23 +23,17 @@ class CreateDomainStructureCommand extends Command
         );
     }
 
-    /**
-     * Retorna o diretório dos stubs.
-     */
     private function getStubsPath(): string
     {
         return dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Stubs';
     }
 
-    /**
-     * Executa o comando.
-     */
     public function handle(): int
     {
         $name = ucfirst($this->argument('name'));
         $force = (bool) $this->option('force');
 
-        $this->info("Iniciando a criação da estrutura para o domínio: {$name}");
+        $this->info("Criando domínio {$name}...");
         $this->newLine();
 
         $this->createModelAndMigration($name, $force);
@@ -53,18 +44,13 @@ class CreateDomainStructureCommand extends Command
         $this->createRepository($name, $force);
 
         $this->newLine();
-        $this->info("✨ Estrutura para {$name} criada com sucesso!");
+        $this->info("✨ Domínio {$name} criado com sucesso!");
 
         return self::SUCCESS;
     }
 
-    /**
-     * Cria Model e Migration utilizando os generators nativos do Laravel.
-     */
-    private function createModelAndMigration(string $name, bool $force = false): void
+    private function createModelAndMigration(string $name, bool $force): void
     {
-        $this->info("Criando Model e Migration para {$name}...");
-
         $params = [
             'name' => $name,
             '-m' => true,
@@ -79,36 +65,26 @@ class CreateDomainStructureCommand extends Command
         $this->outputCommandOutput();
     }
 
-    /**
-     * Cria Controller.
-     */
-    private function createController(string $name, bool $force = false): void
+    private function createController(string $name, bool $force): void
     {
         $this->generateFromStub(
-            stub: 'controller.stub',
-            path: app_path('Http/Controllers'),
-            fileName: "{$name}Controller.php",
-            variables: [
+            'controller.stub',
+            app_path('Http/Controllers'),
+            "{$name}Controller.php",
+            [
                 'name' => $name,
                 'controller' => "{$name}Controller",
                 'domainFolder' => $this->getDomainFolder(),
             ],
-            force: $force,
-            label: 'Controller'
+            $force,
+            'Controller'
         );
     }
 
-    /**
-     * Cria Request.
-     */
-    private function createRequest(string $name, bool $force = false): void
+    private function createRequest(string $name, bool $force): void
     {
-        $requestName = "{$name}Request";
-
-        $this->info("Criando Request {$requestName}...");
-
         $params = [
-            'name' => $requestName,
+            'name' => "{$name}Request",
         ];
 
         if ($force) {
@@ -120,63 +96,51 @@ class CreateDomainStructureCommand extends Command
         $this->outputCommandOutput();
     }
 
-    /**
-     * Cria DTO.
-     */
-    private function createDto(string $name, bool $force = false): void
+    private function createDto(string $name, bool $force): void
     {
         $this->generateFromStub(
-            stub: 'dto.stub',
-            path: app_path("{$this->getDomainFolder()}/{$name}/DTO"),
-            fileName: "{$name}DTO.php",
-            variables: [
+            'dto.stub',
+            app_path("{$this->getDomainFolder()}/{$name}/DTO"),
+            "{$name}DTO.php",
+            [
                 'name' => $name,
                 'domainFolder' => $this->getDomainFolder(),
             ],
-            force: $force,
-            label: 'DTO'
+            $force,
+            'DTO'
         );
     }
 
-    /**
-     * Cria Service.
-     */
-    private function createService(string $name, bool $force = false): void
+    private function createService(string $name, bool $force): void
     {
         $this->generateFromStub(
-            stub: 'service.stub',
-            path: app_path("{$this->getDomainFolder()}/{$name}/Service"),
-            fileName: "{$name}Service.php",
-            variables: [
+            'service.stub',
+            app_path("{$this->getDomainFolder()}/{$name}/Service"),
+            "{$name}Service.php",
+            [
                 'name' => $name,
                 'domainFolder' => $this->getDomainFolder(),
             ],
-            force: $force,
-            label: 'Service'
+            $force,
+            'Service'
         );
     }
 
-    /**
-     * Cria Repository.
-     */
-    private function createRepository(string $name, bool $force = false): void
+    private function createRepository(string $name, bool $force): void
     {
         $this->generateFromStub(
-            stub: 'repository.stub',
-            path: app_path("{$this->getDomainFolder()}/{$name}/Repositories"),
-            fileName: "{$name}Repository.php",
-            variables: [
+            'repository.stub',
+            app_path("{$this->getDomainFolder()}/{$name}/Repositories"),
+            "{$name}Repository.php",
+            [
                 'name' => $name,
                 'domainFolder' => $this->getDomainFolder(),
             ],
-            force: $force,
-            label: 'Repository'
+            $force,
+            'Repository'
         );
     }
 
-    /**
-     * Gera um arquivo a partir de um stub.
-     */
     private function generateFromStub(
         string $stub,
         string $path,
@@ -185,6 +149,7 @@ class CreateDomainStructureCommand extends Command
         bool $force,
         string $label
     ): void {
+
         $fullPath = $path . DIRECTORY_SEPARATOR . $fileName;
 
         $this->info("Criando {$label} {$fileName}...");
@@ -192,47 +157,41 @@ class CreateDomainStructureCommand extends Command
         $this->ensureDirectoryExists($path);
 
         if (File::exists($fullPath) && ! $force) {
-            $this->warn("O arquivo {$fileName} já existe. Ignorado.");
-
+            $this->warn("{$fileName} já existe.");
             return;
         }
 
-        $content = $this->replaceStubVariables(
-            $this->loadStub($stub),
-            $variables
+        File::put(
+            $fullPath,
+            $this->replaceStubVariables(
+                $this->loadStub($stub),
+                $variables
+            )
         );
-
-        File::put($fullPath, $content);
     }
 
-    /**
-     * Carrega um stub da biblioteca.
-     */
     private function loadStub(string $stub): string
     {
-        $stub = strtolower($stub);
-
-        $path = $this->getStubsPath() . DIRECTORY_SEPARATOR . $stub;
+        $path = $this->getStubsPath()
+            . DIRECTORY_SEPARATOR
+            . strtolower($stub);
 
         if (! File::exists($path)) {
             throw new RuntimeException(
-                sprintf(
-                    'Stub [%s] não encontrado em [%s].',
-                    $stub,
-                    $this->getStubsPath()
-                )
+                "Stub não encontrado: {$path}"
             );
         }
 
         return File::get($path);
     }
 
-    /**
-     * Substitui as variáveis existentes no stub.
-     */
-    private function replaceStubVariables(string $stub, array $variables): string
-    {
+    private function replaceStubVariables(
+        string $stub,
+        array $variables
+    ): string {
+
         foreach ($variables as $key => $value) {
+
             $stub = str_replace(
                 [
                     "{{ {$key} }}",
@@ -248,9 +207,6 @@ class CreateDomainStructureCommand extends Command
         return $stub;
     }
 
-    /**
-     * Garante que o diretório exista.
-     */
     private function ensureDirectoryExists(string $path): void
     {
         if (! File::isDirectory($path)) {
@@ -262,9 +218,6 @@ class CreateDomainStructureCommand extends Command
         }
     }
 
-    /**
-     * Exibe o output do comando Artisan executado.
-     */
     private function outputCommandOutput(): void
     {
         $output = trim(Artisan::output());

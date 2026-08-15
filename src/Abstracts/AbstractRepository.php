@@ -12,9 +12,12 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 abstract class AbstractRepository implements RepositoryInterface
 {
     /**
-     * Default field used when the identifier is a string.
+     * Campo utilizado como identificador público.
+     *
+     * Caso o Model implemente getRouteKeyName(),
+     * esse valor será utilizado automaticamente.
      */
-    protected string $idField = 'hash';
+    protected string $routeKey = 'hash';
 
     /**
      * Eloquent model.
@@ -46,6 +49,28 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
+     * Resolve numeric ID or public identifier.
+     */
+    protected function resolveIdentifier(
+        Builder $query,
+        int|string $identifier
+    ): Builder {
+
+        if (is_numeric($identifier)) {
+            return $query->whereKey($identifier);
+        }
+
+        $field = method_exists(
+            $this->model,
+            'getRouteKeyName'
+        )
+            ? $this->model->getRouteKeyName()
+            : $this->routeKey;
+
+        return $query->where($field, $identifier);
+    }
+
+    /**
      * Get paginated records.
      */
     public function all(
@@ -53,6 +78,7 @@ abstract class AbstractRepository implements RepositoryInterface
         array|string $with = [],
         int $perPage = 10
     ): LengthAwarePaginator {
+
         $query = $this->newQuery()
             ->with(
                 $this->normalizeWith($with)
@@ -74,6 +100,7 @@ abstract class AbstractRepository implements RepositoryInterface
         array $filters = [],
         array|string $with = []
     ): Collection {
+
         $query = $this->newQuery()
             ->with(
                 $this->normalizeWith($with)
@@ -94,6 +121,7 @@ abstract class AbstractRepository implements RepositoryInterface
         string $pluckKey = 'id',
         string $sortBy = 'name'
     ): array {
+
         return $this->newQuery()
             ->orderBy($sortBy)
             ->pluck(
@@ -104,7 +132,7 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Create a new model.
+     * Create model.
      */
     public function create(array $data): Model
     {
@@ -112,33 +140,30 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Find a model by ID or configured string identifier.
+     * Find model by ID or public identifier.
      */
     public function find(
         int|string $id,
         array|string $with = []
     ): ?Model {
-        $query = $this->newQuery()
-            ->with(
-                $this->normalizeWith($with)
-            );
 
-        if (is_numeric($id)) {
-            return $query->find($id);
-        }
-
-        return $query
-            ->where($this->idField, $id)
-            ->first();
+        return $this->resolveIdentifier(
+            $this->newQuery()
+                ->with(
+                    $this->normalizeWith($with)
+                ),
+            $id
+        )->first();
     }
 
     /**
-     * Find a model or throw an exception.
+     * Find model or fail.
      */
     public function findOrFail(
         int|string $id,
         array|string $with = []
     ): Model {
+
         $model = $this->find(
             $id,
             $with
@@ -156,23 +181,25 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Delete model by ID.
+     * Delete model.
      */
     public function delete(
         int|string $id
     ): bool {
+
         return (bool) $this
             ->findOrFail($id)
             ->delete();
     }
 
     /**
-     * Update an existing model.
+     * Update model.
      */
     public function update(
         Model $entity,
         array $data
     ): Model {
+
         $entity
             ->fill($data)
             ->save();
@@ -181,12 +208,13 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Get records by conditions.
+     * Find by conditions.
      */
     public function where(
         array $conditions,
         array|string $with = []
     ): Collection {
+
         return $this->newQuery()
             ->where($conditions)
             ->with(
@@ -196,23 +224,25 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Delete records by conditions.
+     * Delete by conditions.
      */
     public function deleteWhere(
         array $conditions
     ): int {
+
         return $this->newQuery()
             ->where($conditions)
             ->delete();
     }
 
     /**
-     * Find first record matching conditions.
+     * Find first by conditions.
      */
     public function findOneWhere(
         array $conditions,
         array|string $with = []
     ): ?Model {
+
         return $this->newQuery()
             ->where($conditions)
             ->with(
@@ -222,12 +252,13 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Update or create model.
+     * Update or create.
      */
     public function updateOrCreate(
         array $attributes,
         array $values = []
     ): Model {
+
         return $this->getModel()
             ->updateOrCreate(
                 $attributes,
@@ -236,22 +267,21 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Remove technical fields from filters.
+     * Remove technical filters.
      */
     protected function cleanFilters(
         array $filters
     ): array {
-        $ignored = [
-            'page',
-            'per_page',
-            'with',
-            'sort',
-            'order',
-            'search',
-        ];
 
         return collect($filters)
-            ->except($ignored)
+            ->except([
+                'page',
+                'per_page',
+                'with',
+                'sort',
+                'order',
+                'search',
+            ])
             ->filter(
                 fn ($value) =>
                     $value !== null &&
@@ -261,16 +291,26 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Normalize relationship list.
+     * Normalize and validate relationships.
      */
-    protected function normalizeWith(array|string $with): array
-    {
+    protected function normalizeWith(
+        array|string $with
+    ): array {
+
         $relations = is_string($with)
-            ? ($with === '' ? [] : explode(',', $with))
+            ? ($with === ''
+                ? []
+                : explode(',', $with))
             : $with;
-    
+
         return collect($relations)
-            ->filter(fn ($relation) => method_exists($this->model, $relation))
+            ->filter(
+                fn ($relation) =>
+                    method_exists(
+                        $this->model,
+                        $relation
+                    )
+            )
             ->values()
             ->all();
     }

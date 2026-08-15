@@ -1,43 +1,43 @@
-# Laravel Domain Generator
+**# Laravel Domain Generator**
 
-[![Latest Stable Version](https://img.shields.io/badge/version-v1.0.17-blue.svg)](https://github.com/SEU_USUARIO/laravel-domain-generator)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Latest Stable Version]\(https\://img.shields.io/badge/version-v1.1.0-blue.svg)]\(https\://github.com/SEU\_USUARIO/laravel-domain-generator)
+[![License: MIT]\(https\://img.shields.io/badge/License-MIT-yellow\.svg)]\(https\://opensource.org/licenses/MIT)
 
-O **Laravel Domain Generator** é um pacote para Laravel desenvolvido para automatizar e padronizar a criação de estruturas baseadas em **Domain Driven Design (DDD)** e **Clean Architecture**.
+O **\*\*Laravel Domain Generator\*\*** é um pacote para Laravel desenvolvido para automatizar e padronizar a criação de estruturas baseadas em **\*\*Domain Driven Design (DDD)\*\*** e **\*\*Clean Architecture\*\***.
 
-Com um único comando Artisan, o pacote gera a estrutura inicial de um domínio, incluindo **Controller, FormRequest, DTO, Service, Repository, Model e Migration**, já integrados às classes abstratas fornecidas pelo pacote.
+Com um único comando Artisan, o pacote gera a estrutura inicial de um domínio, incluindo **\*\*Controller, FormRequest, DTO, Service, Repository, Model e Migration\*\***, já integrados às classes abstratas fornecidas pelo pacote.
 
-A biblioteca também fornece suporte para **API Resources**, paginação, relacionamentos, respostas JSON padronizadas, autenticação JWT e hooks de ciclo de vida no Service.
+A biblioteca também fornece suporte para **\*\*API Resources\*\***, paginação, relacionamentos, respostas JSON padronizadas, autenticação JWT e hooks de ciclo de vida no Service.
 
----
+**---**
 
-## 💡 Funcionalidades
+**## 💡 Funcionalidades**
 
-### 🚀 Geração de Domínio
+**### 🚀 Geração de Domínio**
 
 Crie a estrutura inicial de um domínio utilizando um único comando:
 
-```bash
-php artisan make:domain User
-```
+\`\`\`bash
+php artisan make\:domain User
+\`\`\`
 
 O comando pode gerar:
 
-- Model
-- Migration
-- Controller
-- FormRequest
-- DTO
-- Service
-- Repository
+\- Model
+\- Migration
+\- Controller
+\- FormRequest
+\- DTO
+\- Service
+\- Repository
 
----
+**---**
 
-### 🧱 Arquitetura baseada em DDD / Clean Architecture
+**### 🧱 Arquitetura baseada em DDD / Clean Architecture**
 
 A estrutura gerada separa as principais responsabilidades da aplicação:
 
-```text
+\`\`\`text
 HTTP
  │
  ├── Controller
@@ -57,20 +57,20 @@ HTTP
        │
        ▼
      Model
-```
+\`\`\`
 
 Essa separação permite manter a camada HTTP desacoplada das regras de persistência e facilita a evolução da aplicação.
 
----
+**---**
 
-### 📦 DTOs
+**### 📦 DTOs**
 
-O pacote possui um `AbstractDTO` para criação de Data Transfer Objects.
+O pacote possui um \`AbstractDTO\` para criação de Data Transfer Objects.
 
 Exemplo:
 
-```php
-<?php
+\`\`\`php
+\<?php
 
 namespace App\Domain\User\DTO;
 
@@ -78,24 +78,24 @@ use Domain\DomainGenerator\Abstracts\AbstractDTO;
 
 final class UserDTO extends AbstractDTO
 {
-    public function __construct(
+    public function \_\_construct(
         public readonly string $name,
         public readonly string $email,
         public readonly ?string $phone = null,
     ) {
     }
 }
-```
+\`\`\`
 
 O DTO pode ser configurado diretamente no Controller:
 
-```php
+\`\`\`php
 protected ?string $requestDto = UserDTO::class;
-```
+\`\`\`
 
 O fluxo de criação passa a ser:
 
-```text
+\`\`\`text
 Request
    ↓
 validated()
@@ -105,68 +105,68 @@ UserDTO
 UserService
    ↓
 UserRepository
-```
+\`\`\`
 
 O pacote mantém compatibilidade com Controllers que não utilizam DTOs.
 
----
+**---**
 
-### 🔐 Autenticação JWT
+**### 🔐 Autenticação JWT**
 
 O pacote possui suporte integrado à autenticação JWT utilizando:
 
-`php-open-source-saver/jwt-auth`
+\`php-open-source-saver/jwt-auth\`
 
 São disponibilizados endpoints para:
 
-- Login
-- Logout
-- Refresh
-- Usuário autenticado (`me`)
+\- Login
+\- Logout
+\- Refresh
+\- Usuário autenticado (\`me\`)
 
----
+**---**
 
-### 🏗️ Classes Abstratas
+**### 🏗️ Classes Abstratas**
 
 O pacote fornece classes base para padronizar a arquitetura.
 
-#### AbstractController
+**#### AbstractController**
 
 Responsável por:
 
-- Respostas JSON padronizadas
-- `ok()`
-- `success()`
-- `error()`
-- Integração com FormRequests
-- Integração com DTOs
-- Integração com API Resources
-- Paginação
-- Tratamento de exceções
-- Controle de permissões
-- Relacionamentos através de `with`
+\- Respostas JSON padronizadas
+\- \`ok()\`
+\- \`success()\`
+\- \`error()\`
+\- Integração com FormRequests
+\- Integração com DTOs
+\- Integração com API Resources
+\- Paginação
+\- Tratamento de exceções
+\- Controle de permissões
+\- Relacionamentos através de \`with\`
 
-#### AbstractService
+**#### AbstractService**
 
 Fornece operações comuns de aplicação:
 
-- `getAll()`
-- `find()`
-- `save()`
-- `saveDto()`
-- `update()`
-- `updateDto()`
-- `delete()`
-- `create()`
-- `createDto()`
-- `updateOrCreate()`
-- `updateOrCreateDto()`
-- `preRequisite()`
-- `toSelect()`
+\- \`getAll()\`
+\- \`find()\`
+\- \`save()\`
+\- \`saveDto()\`
+\- \`update()\`
+\- \`updateDto()\`
+\- \`delete()\`
+\- \`create()\`
+\- \`createDto()\`
+\- \`updateOrCreate()\`
+\- \`updateOrCreateDto()\`
+\- \`preRequisite()\`
+\- \`toSelect()\`
 
 Também disponibiliza hooks:
 
-```text
+\`\`\`text
 beforeSave
 afterSave
 
@@ -175,62 +175,62 @@ afterUpdate
 
 beforeDelete
 afterDelete
-```
+\`\`\`
 
-#### AbstractRepository
+**#### AbstractRepository**
 
 Fornece uma abstração sobre o Eloquent com suporte a:
 
-- Paginação
-- Filtros
-- Relacionamentos
-- Busca por ID
-- Busca por campo alternativo
-- `findOrFail`
-- `where`
-- `findOneWhere`
-- `create`
-- `update`
-- `delete`
-- `deleteWhere`
-- `updateOrCreate`
-- `pluck`
+\- Paginação
+\- Filtros
+\- Relacionamentos
+\- Busca por ID
+\- Busca por campo alternativo
+\- \`findOrFail\`
+\- \`where\`
+\- \`findOneWhere\`
+\- \`create\`
+\- \`update\`
+\- \`delete\`
+\- \`deleteWhere\`
+\- \`updateOrCreate\`
+\- \`pluck\`
 
----
+**---**
 
-## 📦 Instalação
+**## 📦 Instalação**
 
 Instale o pacote via Composer:
 
-```bash
+\`\`\`bash
 composer require domain/laravel-domain-generator
-```
+\`\`\`
 
 O pacote instalará automaticamente as dependências necessárias do JWT:
 
-```text
+\`\`\`text
 php-open-source-saver/jwt-auth
-```
+\`\`\`
 
----
+**---**
 
-# 🏗️ Criando um domínio
+**# 🏗️ Criando um domínio**
 
 Para criar um novo domínio:
 
-```bash
-php artisan make:domain User
-```
+\`\`\`bash
+php artisan make\:domain User
+\`\`\`
 
 Para forçar a recriação de arquivos existentes:
 
-```bash
-php artisan make:domain User --force
-```
+\`\`\`bash
+php artisan make\:domain User --force
+\`\`\`
 
 A estrutura gerada será semelhante a:
 
-```text
+\`\`\`text
 app/
 ├── Domain/
 │   └── User/
@@ -252,17 +252,17 @@ app/
 │
 └── Models/
     └── User.php
-```
+\`\`\`
 
-> API Resources são criados manualmente em `app/Http/Resources`, pois pertencem à camada HTTP da aplicação e não à camada de domínio.
+\> API Resources são criados manualmente em \`app/Http/Resources\`, pois pertencem à camada HTTP da aplicação e não à camada de domínio.
 
----
+**---**
 
-# 🔄 Fluxo de uma requisição
+**# 🔄 Fluxo de uma requisição**
 
 Com DTO configurado, uma requisição de criação seguirá aproximadamente este fluxo:
 
-```text
+\`\`\`text
 HTTP Request
      │
      ▼
@@ -289,16 +289,16 @@ UserResource
      │
      ▼
 JSON Response
-```
+\`\`\`
 
----
+**---**
 
-# 📝 FormRequest
+**# 📝 FormRequest**
 
 O Request gerado pode ser utilizado normalmente para validação:
 
-```php
-<?php
+\`\`\`php
+\<?php
 
 namespace App\Http\Requests;
 
@@ -334,16 +334,16 @@ class UserRequest extends FormRequest
         ];
     }
 }
-```
+\`\`\`
 
----
+**---**
 
-# 📦 DTO
+**# 📦 DTO**
 
 Depois de validar os dados, o Controller pode convertê-los automaticamente para um DTO.
 
-```php
-<?php
+\`\`\`php
+\<?php
 
 namespace App\Domain\User\DTO;
 
@@ -351,62 +351,62 @@ use Domain\DomainGenerator\Abstracts\AbstractDTO;
 
 final class UserDTO extends AbstractDTO
 {
-    public function __construct(
+    public function \_\_construct(
         public readonly string $name,
         public readonly string $email,
         public readonly ?string $phone = null,
     ) {
     }
 }
-```
+\`\`\`
 
 No Controller:
 
-```php
+\`\`\`php
 protected ?string $requestValidate = UserRequest::class;
 
 protected ?string $requestDto = UserDTO::class;
-```
+\`\`\`
 
-O `AbstractController` fará automaticamente:
+O \`AbstractController\` fará automaticamente:
 
-```text
+\`\`\`text
 $validated
     ↓
 UserDTO::fromArray()
-```
+\`\`\`
 
 O Service recebe o DTO através de:
 
-```php
+\`\`\`php
 $this->service->saveDto($dto);
-```
+\`\`\`
 
 Internamente, o DTO é convertido para array antes de chegar ao Repository.
 
----
+**---**
 
-# 🧩 API Resources
+**# 🧩 API Resources**
 
 Os API Resources devem ficar na camada HTTP:
 
-```text
+\`\`\`text
 app/
 └── Http/
     └── Resources/
         └── UserResource.php
-```
+\`\`\`
 
 Para criar um Resource:
 
-```bash
-php artisan make:resource UserResource
-```
+\`\`\`bash
+php artisan make\:resource UserResource
+\`\`\`
 
 Exemplo:
 
-```php
-<?php
+\`\`\`php
+\<?php
 
 namespace App\Http\Resources;
 
@@ -425,128 +425,128 @@ class UserResource extends JsonResource
         ];
     }
 }
-```
+\`\`\`
 
 No Controller:
 
-```php
+\`\`\`php
 use App\Http\Resources\UserResource;
 
 class UserController extends AbstractController
 {
     protected ?string $resource = UserResource::class;
 }
-```
+\`\`\`
 
-A partir desse momento, o `AbstractController` utilizará automaticamente o Resource nas respostas.
+A partir desse momento, o \`AbstractController\` utilizará automaticamente o Resource nas respostas.
 
----
+**---**
 
-## 📄 Resources com Collection
+**## 📄 Resources com Collection**
 
-Para respostas de listas, o `AbstractController` também suporta Resources:
+Para respostas de listas, o \`AbstractController\` também suporta Resources:
 
-```php
+\`\`\`php
 protected ?string $resource = UserResource::class;
-```
+\`\`\`
 
 O resultado será transformado automaticamente através de:
 
-```php
+\`\`\`php
 UserResource::collection($items)
-```
+\`\`\`
 
----
+**---**
 
-## 📑 Resources com Paginação
+**## 📑 Resources com Paginação**
 
 Paginação também é suportada:
 
-```php
+\`\`\`php
 public function index(Request $request): JsonResponse
 {
     return $this->handle(
         fn () => $this->service->getAll(
-            $request->all(),
+            $request->query(),
             $this->resolveWith($request)
         )
     );
 }
-```
+\`\`\`
 
-Quando o Service retornar um `LengthAwarePaginator`, o `AbstractController` utilizará o Resource configurado e preservará os metadados de paginação.
+Quando o Service retornar um \`LengthAwarePaginator\`, o \`AbstractController\` utilizará o Resource configurado e preservará os metadados de paginação.
 
----
+**---**
 
-# 🔗 Relacionamentos
+**# 🔗 Relacionamentos**
 
-É possível solicitar relacionamentos através do parâmetro `with`.
+É possível solicitar relacionamentos através do parâmetro \`with\`.
 
 Por exemplo:
 
-```http
+\`\`\`http
 GET /api/users?with=roles,permissions
-```
+\`\`\`
 
 Ou definir relacionamentos padrão no Controller:
 
-```php
+\`\`\`php
 protected array $with = [
     'roles',
     'permissions',
 ];
-```
+\`\`\`
 
-O `AbstractRepository` normaliza automaticamente os relacionamentos recebidos.
+O \`AbstractRepository\` normaliza automaticamente os relacionamentos recebidos.
 
----
+**---**
 
-# 🔎 Filtros
+**# 🔎 Filtros**
 
 Os filtros podem ser enviados diretamente na requisição:
 
-```http
+\`\`\`http
 GET /api/users?name=John&status=active
-```
+\`\`\`
 
-O `AbstractRepository` remove automaticamente parâmetros técnicos como:
+O \`AbstractRepository\` remove automaticamente parâmetros técnicos como:
 
-```text
+\`\`\`text
 page
-per_page
+per\_page
 with
 sort
 order
 search
-```
+\`\`\`
 
 antes de aplicar os filtros à consulta.
 
----
+**---**
 
-# 🔑 Configuração Rápida da Autenticação JWT
+**# 🔑 Configuração Rápida da Autenticação JWT**
 
 Para utilizar os endpoints de autenticação prontos, faça as seguintes etapas.
 
-## 1. Gere a chave secreta
+**## 1. Gere a chave secreta**
 
-```bash
-php artisan jwt:secret
-```
+\`\`\`bash
+php artisan jwt\:secret
+\`\`\`
 
----
+**---**
 
-## 2. Configure o Guard da API
+**## 2. Configure o Guard da API**
 
 No arquivo:
 
-```text
+\`\`\`text
 config/auth.php
-```
+\`\`\`
 
 configure o guard:
 
-```php
+\`\`\`php
 'guards' => [
     'web' => [
         'driver' => 'session',
@@ -558,16 +558,16 @@ configure o guard:
         'provider' => 'users',
     ],
 ],
-```
+\`\`\`
 
----
+**---**
 
-## 3. Atualize o Model User
+**## 3. Atualize o Model User**
 
-Adicione `JWTSubject` e `HasJwtAuth`:
+Adicione \`JWTSubject\` e \`HasJwtAuth\`:
 
-```php
-<?php
+\`\`\`php
+\<?php
 
 namespace App\Models;
 
@@ -581,77 +581,147 @@ class User extends Authenticatable implements JWTSubject
 
     // ...
 }
-```
+\`\`\`
 
----
+**---**
 
-# 🌐 Endpoints de Autenticação
+**# 🌐 Endpoints de Autenticação**
 
 O pacote disponibiliza rotas de autenticação sob o prefixo:
 
-```text
+\`\`\`text
 /api/auth
-```
+\`\`\`
 
-| Método | Endpoint | Protegido | Descrição |
-|---|---|:---:|---|
-| POST | `/api/auth/login` | ❌ | Realiza login e retorna o token JWT |
-| GET | `/api/auth/me` | ✅ | Retorna o usuário autenticado |
-| POST | `/api/auth/refresh` | ✅ | Renova o token |
-| POST | `/api/auth/logout` | ✅ | Invalida o token atual |
+\| Método | Endpoint | Protegido | Descrição |
+\|---|---|:---:|---|
+\| POST | \`/api/auth/login\` | ❌ | Realiza login e retorna o token JWT |
+\| GET | \`/api/auth/me\` | ✅ | Retorna o usuário autenticado |
+\| POST | \`/api/auth/refresh\` | ✅ | Renova o token |
+\| POST | \`/api/auth/logout\` | ✅ | Invalida o token atual |
 
+**---**
+
+**
 ---
 
-# 🔐 Permissões
+# 🔑 Identificadores Públicos (Hash)
 
-O `AbstractController` possui suporte à verificação de permissões:
+A partir da **v1.1.0**, o pacote possui suporte nativo a identificadores públicos através do trait `HasHash`.
+
+## Como utilizar
+
+No Model:
 
 ```php
-$this->hasPermissionTo('users.create');
+use Domain\DomainGenerator\Traits\HasHash;
+
+class User extends Authenticatable
+{
+    use HasHash;
+}
 ```
+
+O trait oferece automaticamente:
+
+- geração automática de UUID no campo `hash`;
+- compatibilidade entre `find($id)` e `find($hash)`;
+- Route Model Binding utilizando `hash`;
+- método `getPublicIdentifier()`.
+
+## Migration
+
+Adicione o campo:
+
+```php
+$table->uuid('hash')->unique();
+```
+
+## Buscando registros
+
+Por ID:
+
+```php
+$this->repository->find(1);
+```
+
+Por hash:
+
+```php
+$this->repository->find('c9d47f58-20dd-41b3-b65e-f6ec5faef8d');
+```
+
+Os métodos `findOrFail()`, `delete()` e `update()` também aceitam ambos.
+
+## Rotas
+
+Com `HasHash`, o Laravel passa a resolver automaticamente:
+
+```http
+GET /api/users/c9d47f58-20dd-41b3-b65e-f6ec5faef8d
+```
+
+## Relacionamentos seguros
+
+O parâmetro `with` agora valida automaticamente se o relacionamento existe.
+
+```http
+GET /api/users?with=roles,permissions
+```
+
+Relacionamentos inexistentes são ignorados, evitando erros 500.
+
+
+# 🔐 Permissões**
+
+O \`AbstractController\` possui suporte à verificação de permissões:
+
+\`\`\`php
+$this->hasPermissionTo('users.create');
+\`\`\`
 
 Caso o usuário não possua a permissão necessária, será lançada uma exceção de autorização.
 
----
+**---**
 
-# ⚙️ Configuração do diretório de Domínios
+**# ⚙️ Configuração do diretório de Domínios**
 
 Por padrão, os domínios são criados dentro de:
 
-```text
+\`\`\`text
 app/Domain
-```
+\`\`\`
 
 É possível alterar esse comportamento através da variável:
 
-```env
-APP_DOMAIN_FOLDER=Domain
-```
+\`\`\`env
+APP\_DOMAIN\_FOLDER=Domain
+\`\`\`
 
 Por exemplo:
 
-```env
-APP_DOMAIN_FOLDER=Modules
-```
+\`\`\`env
+APP\_DOMAIN\_FOLDER=Modules
+\`\`\`
 
 Nesse caso:
 
-```text
+\`\`\`text
 app/Modules/User/
-```
+\`\`\`
 
 será utilizado como diretório do domínio.
 
----
+**---**
 
-# 🧪 Exemplo completo
+**# 🧪 Exemplo completo**
 
 Uma implementação básica pode ficar assim:
 
-### Controller
+**### Controller**
 
-```php
-<?php
+\`\`\`php
+\<?php
 
 namespace App\Http\Controllers;
 
@@ -671,17 +741,17 @@ class UserController extends AbstractController
 
     protected ?string $resource = UserResource::class;
 
-    public function __construct(UserService $service)
+    public function \_\_construct(UserService $service)
     {
         $this->service = $service;
     }
 }
-```
+\`\`\`
 
-### DTO
+**### DTO**
 
-```php
-<?php
+\`\`\`php
+\<?php
 
 namespace App\Domain\User\DTO;
 
@@ -689,18 +759,18 @@ use Domain\DomainGenerator\Abstracts\AbstractDTO;
 
 final class UserDTO extends AbstractDTO
 {
-    public function __construct(
+    public function \_\_construct(
         public readonly string $name,
         public readonly string $email,
     ) {
     }
 }
-```
+\`\`\`
 
-### Service
+**### Service**
 
-```php
-<?php
+\`\`\`php
+\<?php
 
 namespace App\Domain\User\Service;
 
@@ -709,17 +779,17 @@ use Domain\DomainGenerator\Abstracts\AbstractService;
 
 class UserService extends AbstractService
 {
-    public function __construct(UserRepository $repository)
+    public function \_\_construct(UserRepository $repository)
     {
         $this->repository = $repository;
     }
 }
-```
+\`\`\`
 
-### Repository
+**### Repository**
 
-```php
-<?php
+\`\`\`php
+\<?php
 
 namespace App\Domain\User\Repositories;
 
@@ -728,17 +798,17 @@ use Domain\DomainGenerator\Abstracts\AbstractRepository;
 
 class UserRepository extends AbstractRepository
 {
-    public function __construct(User $model)
+    public function \_\_construct(User $model)
     {
-        parent::__construct($model);
+        parent::\_\_construct($model);
     }
 }
-```
+\`\`\`
 
-### Resource
+**### Resource**
 
-```php
-<?php
+\`\`\`php
+\<?php
 
 namespace App\Http\Resources;
 
@@ -756,64 +826,66 @@ class UserResource extends JsonResource
         ];
     }
 }
-```
+\`\`\`
 
----
+**---**
 
-# 🧠 Princípios da arquitetura
+**# 🧠 Princípios da arquitetura**
 
 A biblioteca busca manter as responsabilidades separadas:
 
-| Camada | Responsabilidade |
-|---|---|
-| Controller | Entrada HTTP e resposta |
-| FormRequest | Validação da entrada |
-| DTO | Transporte dos dados |
-| Service | Regras/processos da aplicação |
-| Repository | Persistência e consultas |
-| Model | Representação Eloquent |
-| Resource | Transformação da resposta HTTP |
+\| Camada | Responsabilidade |
+\|---|---|
+\| Controller | Entrada HTTP e resposta |
+\| FormRequest | Validação da entrada |
+\| DTO | Transporte dos dados |
+\| Service | Regras/processos da aplicação |
+\| Repository | Persistência e consultas |
+\| Model | Representação Eloquent |
+\| Resource | Transformação da resposta HTTP |
 
 Uma regra importante é evitar colocar dependências HTTP dentro do domínio.
 
 Por isso:
 
-```text
+\`\`\`text
 DTO
 Service
 Repository
-```
+\`\`\`
 
 ficam dentro do domínio, enquanto:
 
-```text
+\`\`\`text
 Controller
 Request
 Resource
-```
+\`\`\`
 
 ficam na camada HTTP.
 
----
+**---**
 
-# 🚀 Roadmap
+**# 🚀 Roadmap**
 
 Possíveis evoluções futuras:
 
-- [ ] Geração automática de API Resources
-- [ ] Geração de DTOs baseada no `$fillable` do Model
-- [ ] DTOs específicos para Store e Update
-- [ ] Conversão automática de tipos nos DTOs
-- [ ] Value Objects
-- [ ] Domain Events
-- [ ] Repository Interfaces
-- [ ] Use Cases / Application Services
-- [ ] Policies
-- [ ] Testes automatizados gerados pelo comando
-- [ ] Suporte a diferentes estratégias de persistência
+\- [ ] Geração automática de API Resources
+\- [ ] Geração de DTOs baseada no \`$fillable\` do Model
+\- [ ] DTOs específicos para Store e Update
+\- [ ] Conversão automática de tipos nos DTOs
+\- [ ] Value Objects
+\- [ ] Domain Events
+\- [ ] Repository Interfaces
+\- [ ] Use Cases / Application Services
+\- [ ] Policies
+\- [ ] Testes automatizados gerados pelo comando
+\- [ ] Suporte a diferentes estratégias de persistência
 
----
+**---**
 
-# 📄 Licença
+**# 📄 Licença**
 
 Este projeto está licenciado sob a licença MIT.
+
+**---**
