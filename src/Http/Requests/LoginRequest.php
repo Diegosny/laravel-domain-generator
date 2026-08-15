@@ -14,14 +14,8 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => [
-                'required',
-                'email',
-            ],
-            'password' => [
-                'required',
-                'string',
-            ],
+            config('domain-generator.auth.login_field', 'email') => ['required'],
+            'password' => ['required', 'string'],
         ];
     }
 }

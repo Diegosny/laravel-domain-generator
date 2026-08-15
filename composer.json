@@ -22,7 +22,7 @@
   "extra": {
     "laravel": {
       "providers": [
-        "Domain\\DomainGenerator\\DomainGeneratorServiceProvider"
+        "Domain\\DomainGenerator\\Providers\\DomainGeneratorServiceProvider"
       ]
     }
   },

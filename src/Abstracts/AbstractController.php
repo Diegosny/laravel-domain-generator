@@ -32,12 +32,6 @@ abstract class AbstractController extends Controller
 
     protected array $with = [];
 
-    /*
-    |--------------------------------------------------------------------------
-    | CRUD
-    |--------------------------------------------------------------------------
-    */
-
     public function index(Request $request): JsonResponse
     {
         return $this->handle(
@@ -61,11 +55,7 @@ abstract class AbstractController extends Controller
     public function store(Request $request): JsonResponse
     {
         return $this->handle(function () use ($request) {
-
-            $data = $this->validatedData(
-                $request,
-                false
-            );
+            $data = $this->validatedData($request, false);
 
             if ($this->requestDto) {
                 return $this->service->saveDto(
@@ -80,11 +70,7 @@ abstract class AbstractController extends Controller
     public function update(Request $request, mixed $id): JsonResponse
     {
         return $this->handle(function () use ($request, $id) {
-
-            $data = $this->validatedData(
-                $request,
-                true
-            );
+            $data = $this->validatedData($request, true);
 
             if ($this->requestDtoUpdate) {
                 return $this->service->updateDto(
@@ -93,61 +79,33 @@ abstract class AbstractController extends Controller
                 );
             }
 
-            return $this->service->update(
-                $id,
-                $data
-            );
+            return $this->service->update($id, $data);
         });
     }
 
     public function destroy(mixed $id): JsonResponse
     {
         return $this->handle(function () use ($id) {
-
             $this->service->delete($id);
 
             return [
-                'message' => 'Registro removido com sucesso.'
+                'message' => 'Registro removido com sucesso.',
             ];
         });
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Handler
-    |--------------------------------------------------------------------------
-    */
-
-    protected function handle(
-        callable $callback,
-        int $status = 200
-    ): JsonResponse {
-
+    protected function handle(callable $callback, int $status = 200): JsonResponse
+    {
         try {
-
-            $result = $callback();
-
             return $this->success(
-                $this->applyResource($result),
+                $this->applyResource($callback()),
                 $status
             );
-
         } catch (ValidationException $e) {
-
-            return $this->error(
-                $e->errors(),
-                422
-            );
-
+            return $this->error($e->errors(), 422);
         } catch (AuthorizationException $e) {
-
-            return $this->error(
-                $e->getMessage(),
-                403
-            );
-
+            return $this->error($e->getMessage(), 403);
         } catch (Throwable $e) {
-
             return $this->error(
                 app()->hasDebugModeEnabled()
                     ? $e->getMessage()
@@ -157,20 +115,10 @@ abstract class AbstractController extends Controller
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Resources
-    |--------------------------------------------------------------------------
-    */
-
     protected function applyResource(mixed $payload): mixed
     {
-        if (! $this->resource) {
+        if (! $this->resource || $payload === null) {
             return $payload;
-        }
-
-        if ($payload === null) {
-            return null;
         }
 
         if ($payload instanceof JsonResource) {
@@ -183,11 +131,7 @@ abstract class AbstractController extends Controller
             return $resource::collection($payload);
         }
 
-        if ($payload instanceof EloquentCollection) {
-            return $resource::collection($payload);
-        }
-
-        if ($payload instanceof Collection) {
+        if ($payload instanceof EloquentCollection || $payload instanceof Collection) {
             return $resource::collection($payload);
         }
 
@@ -197,12 +141,6 @@ abstract class AbstractController extends Controller
 
         return $payload;
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Helpers
-    |--------------------------------------------------------------------------
-    */
 
     protected function resolveWith(Request $request): array
     {
@@ -227,11 +165,8 @@ abstract class AbstractController extends Controller
         );
     }
 
-    protected function validatedData(
-        Request $request,
-        bool $update = false
-    ): array {
-
+    protected function validatedData(Request $request, bool $update = false): array
+    {
         $requestClass = $update
             ? $this->requestValidateUpdate
             : $this->requestValidate;
@@ -240,7 +175,6 @@ abstract class AbstractController extends Controller
             return $request->all();
         }
 
-        /** @var FormRequest $formRequest */
         $formRequest = app($requestClass);
 
         $formRequest->setContainer(app())
@@ -260,36 +194,21 @@ abstract class AbstractController extends Controller
         return $formRequest->validated();
     }
 
-    protected function hasPermissionTo(
-        string $permission
-    ): void {
-
+    protected function hasPermissionTo(string $permission): void
+    {
         $user = Auth::user();
 
         if (! $user || ! method_exists($user, 'hasPermissionTo')) {
-            throw new AuthorizationException(
-                'Usuário não autenticado.'
-            );
+            throw new AuthorizationException('Usuário não autenticado.');
         }
 
         if (! $user->hasPermissionTo($permission)) {
-            throw new AuthorizationException(
-                'Você não possui permissão para executar esta ação.'
-            );
+            throw new AuthorizationException('Você não possui permissão para executar esta ação.');
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Responses
-    |--------------------------------------------------------------------------
-    */
-
-    protected function success(
-        mixed $data = null,
-        int $status = 200
-    ): JsonResponse {
-
+    protected function success(mixed $data = null, int $status = 200): JsonResponse
+    {
         return response()->json([
             'type' => 'success',
             'status' => $status,
@@ -297,11 +216,8 @@ abstract class AbstractController extends Controller
         ], $status);
     }
 
-    protected function error(
-        mixed $message,
-        int $status = 500
-    ): JsonResponse {
-
+    protected function error(mixed $message, int $status = 500): JsonResponse
+    {
         return response()->json([
             'type' => 'error',
             'status' => $status,
@@ -310,10 +226,8 @@ abstract class AbstractController extends Controller
         ], $status);
     }
 
-    protected function ok(
-        mixed $data = null
-    ): JsonResponse {
-
+    protected function ok(mixed $data = null): JsonResponse
+    {
         return $this->success($data);
     }
 }

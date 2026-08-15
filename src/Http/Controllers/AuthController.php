@@ -2,57 +2,74 @@
 
 namespace Domain\DomainGenerator\Http\Controllers;
 
-use Domain\DomainGenerator\Abstracts\AbstractController;
 use Domain\DomainGenerator\Http\Requests\LoginRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Routing\Controller;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
-class AuthController extends AbstractController
+class AuthController extends Controller
 {
     public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->validated();
+        $field = config('domain-generator.auth.login_field', 'email');
 
-        if (! $token = auth('api')->attempt($credentials)) {
-            return $this->error(
-                'Credenciais inválidas.',
-                401
-            );
+        $credentials = [
+            $field => $request->validated()[$field],
+            'password' => $request->validated()['password'],
+        ];
+
+        if (! $token = auth(config('domain-generator.auth.guard', 'api'))->attempt($credentials)) {
+            return response()->json([
+                'type' => 'error',
+                'status' => 401,
+                'message' => 'Credenciais inválidas.',
+                'show' => app()->hasDebugModeEnabled(),
+            ], 401);
         }
 
-        return $this->success(
-            $this->tokenPayload($token)
-        );
+        return response()->json([
+            'type' => 'success',
+            'status' => 200,
+            'data' => $this->tokenPayload($token),
+        ]);
     }
 
     public function me(): JsonResponse
     {
-        return $this->success(
-            auth('api')->user()
-        );
+        return response()->json([
+            'type' => 'success',
+            'status' => 200,
+            'data' => auth(config('domain-generator.auth.guard', 'api'))->user(),
+        ]);
     }
 
     public function refresh(): JsonResponse
     {
-        return $this->success(
-            $this->tokenPayload(
-                auth('api')->refresh()
-            )
-        );
+        return response()->json([
+            'type' => 'success',
+            'status' => 200,
+            'data' => $this->tokenPayload(
+                auth(config('domain-generator.auth.guard', 'api'))->refresh()
+            ),
+        ]);
     }
 
     public function logout(): JsonResponse
     {
-        auth('api')->logout();
+        auth(config('domain-generator.auth.guard', 'api'))->logout();
 
-        return $this->success([
-            'message' => 'Logout realizado com sucesso.'
+        return response()->json([
+            'type' => 'success',
+            'status' => 200,
+            'data' => [
+                'message' => 'Logout realizado com sucesso.',
+            ],
         ]);
     }
 
     protected function tokenPayload(string $token): array
     {
-        $guard = auth('api');
+        $guard = auth(config('domain-generator.auth.guard', 'api'));
 
         return [
             'access_token' => $token,
