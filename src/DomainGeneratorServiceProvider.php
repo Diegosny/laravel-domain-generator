@@ -17,6 +17,10 @@ class DomainGeneratorServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->loadRoutesFrom(
+            dirname(__DIR__) . '/routes/api.php'
+        );
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 CreateDomainStructureCommand::class,

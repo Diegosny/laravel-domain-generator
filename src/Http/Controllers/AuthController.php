@@ -3,46 +3,77 @@
 namespace Domain\DomainGenerator\Http\Controllers;
 
 use Domain\DomainGenerator\Abstracts\AbstractController;
+use Domain\DomainGenerator\Http\Requests\LoginRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends AbstractController
 {
-    public function login(Request $request): JsonResponse
+    /**
+     * Realiza autenticação do usuário.
+     */
+    public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->only(['email', 'password']);
+        $credentials = $request->validated();
 
         if (! $token = Auth::guard('api')->attempt($credentials)) {
-            return $this->error('Credenciais inválidas', [], 401);
+            return $this->error(
+                'Credenciais inválidas.',
+                401
+            );
         }
 
-        return $this->respondWithToken($token);
+        return $this->success(
+            $this->tokenPayload($token)
+        );
     }
 
+    /**
+     * Retorna o usuário autenticado.
+     */
     public function me(): JsonResponse
     {
-        return $this->ok(Auth::guard('api')->user());
+        return $this->success(
+            Auth::guard('api')->user()
+        );
     }
 
+    /**
+     * Renova o token JWT.
+     */
+    public function refresh(): JsonResponse
+    {
+        return $this->success(
+            $this->tokenPayload(
+                Auth::guard('api')->refresh()
+            )
+        );
+    }
+
+    /**
+     * Realiza logout.
+     */
     public function logout(): JsonResponse
     {
         Auth::guard('api')->logout();
 
-        return $this->success('Logout realizado com sucesso');
-    }
-
-    public function refresh(): JsonResponse
-    {
-        return $this->respondWithToken(Auth::guard('api')->refresh());
-    }
-
-    protected function respondWithToken(string $token): JsonResponse
-    {
-        return $this->ok([
-            'access_token' => $token,
-            'token_type'   => 'bearer',
-            'expires_in'   => Auth::guard('api')->factory()->getTTL() * 60,
+        return $this->success([
+            'message' => 'Logout realizado com sucesso.'
         ]);
+    }
+
+    /**
+     * Monta o payload padrão do JWT.
+     */
+    protected function tokenPayload(string $token): array
+    {
+        $guard = Auth::guard('api');
+
+        return [
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'expires_in' => $guard->factory()->getTTL() * 60,
+            'user' => $guard->user(),
+        ];
     }
 }
