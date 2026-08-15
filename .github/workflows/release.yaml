@@ -1,4 +1,4 @@
-name: Release
+name: Auto Release
 
 on:
   push:
@@ -13,20 +13,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Create Tag
-        id: tag
+      - name: Get next version
+        id: version
         run: |
-          VERSION=$(date +"v%Y.%m.%d.%H%M")
-          git tag $VERSION
-          git push origin $VERSION
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          LAST_TAG=$(git tag --list 'v*' --sort=-v:refname | head -n1)
 
-      - name: Create Release
+          if [ -z "$LAST_TAG" ]; then
+            NEW_TAG="v1.0.0"
+          else
+            VERSION=${LAST_TAG#v}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            PATCH=$((PATCH + 1))
+            NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+
+          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+
+      - name: Create Tag
+        run: |
+          git tag ${{ steps.version.outputs.tag }}
+          git push origin ${{ steps.version.outputs.tag }}
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.tag.outputs.version }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
