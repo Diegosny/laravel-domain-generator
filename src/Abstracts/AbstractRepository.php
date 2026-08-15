@@ -195,16 +195,13 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Update model.
      */
-    public function update(
-        Model $entity,
-        array $data
-    ): Model {
+    public function update(Model $entity,array $data): Model 
+    {
+        $entity->fill($data);
 
-        $entity
-            ->fill($data)
-            ->save();
+        $entity->save();
 
-        return $entity;
+        return $entity->refresh();
     }
 
     /**

@@ -5,18 +5,15 @@ namespace Domain\DomainGenerator\Http\Controllers;
 use Domain\DomainGenerator\Abstracts\AbstractController;
 use Domain\DomainGenerator\Http\Requests\LoginRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends AbstractController
 {
-    /**
-     * Realiza autenticação do usuário.
-     */
     public function login(LoginRequest $request): JsonResponse
     {
         $credentials = $request->validated();
 
-        if (! $token = Auth::guard('api')->attempt($credentials)) {
+        if (! $token = auth('api')->attempt($credentials)) {
             return $this->error(
                 'Credenciais inválidas.',
                 401
@@ -28,46 +25,34 @@ class AuthController extends AbstractController
         );
     }
 
-    /**
-     * Retorna o usuário autenticado.
-     */
     public function me(): JsonResponse
     {
         return $this->success(
-            Auth::guard('api')->user()
+            auth('api')->user()
         );
     }
 
-    /**
-     * Renova o token JWT.
-     */
     public function refresh(): JsonResponse
     {
         return $this->success(
             $this->tokenPayload(
-                Auth::guard('api')->refresh()
+                auth('api')->refresh()
             )
         );
     }
 
-    /**
-     * Realiza logout.
-     */
     public function logout(): JsonResponse
     {
-        Auth::guard('api')->logout();
+        auth('api')->logout();
 
         return $this->success([
             'message' => 'Logout realizado com sucesso.'
         ]);
     }
 
-    /**
-     * Monta o payload padrão do JWT.
-     */
     protected function tokenPayload(string $token): array
     {
-        $guard = Auth::guard('api');
+        $guard = auth('api');
 
         return [
             'access_token' => $token,

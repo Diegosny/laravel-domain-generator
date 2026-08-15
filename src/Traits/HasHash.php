@@ -13,9 +13,29 @@ trait HasHash
     {
         static::creating(function ($model) {
 
-            if (empty($model->hash)) {
-                $model->hash = (string) Str::uuid();
+            if ($model->hash) {
+                return;
             }
+
+            $strategy = config(
+                'domain-generator.identifier.strategy',
+                'ulid'
+            );
+
+            $model->hash = match ($strategy) {
+
+                'uuid' => (string) Str::uuid(),
+
+                'uuid32' => str_replace(
+                    '-',
+                    '',
+                    (string) Str::uuid()
+                ),
+
+                'ulid' => (string) Str::ulid(),
+
+                default => (string) Str::ulid(),
+            };
         });
     }
 
