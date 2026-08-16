@@ -1,47 +1,38 @@
-:root {
-  --vp-c-brand-1: #e11d48;
-  --vp-c-brand-2: #be123c;
-  --vp-c-brand-3: #9f1239;
-
-  --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(
-    120deg,
-    #e11d48,
-    #f97316
-  );
+.VPSidebarGroup {
+    margin-bottom: 18px;
 }
 
-.VPHomeHero .image {
-  filter: drop-shadow(0 0 40px rgba(225, 29, 72, 0.35));
+.VPSidebarGroup .title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--vp-c-text-2);
 }
 
-.VPFeature {
-  border: 1px solid var(--vp-c-divider);
-  transition: all .25s ease;
+.VPSidebarItem.level-1 .text {
+    font-size: 14px;
 }
 
-.VPFeature:hover {
-  transform: translateY(-4px);
-  border-color: var(--vp-c-brand-1);
+.VPSidebarItem.is-active>.item>.text {
+    color: var(--vp-c-brand-1);
+    font-weight: 600;
 }
 
-.vp-doc table {
-  display: table;
-  width: 100%;
+.VPDoc h2 {
+    border-top: 1px solid var(--vp-c-divider);
+    padding-top: 28px;
 }
 
-.vp-doc img {
-  border-radius: 12px;
+.VPDoc h3 {
+    margin-top: 24px;
 }
 
-.vp-doc svg {
-  margin: 24px auto;
+.VPDoc div[class*="language-"] {
+    border-radius: 12px;
 }
 
-.vp-doc h2 {
-  margin-top: 48px;
-}
-
-.vp-doc h3 {
-  margin-top: 32px;
+.VPDoc table {
+    border-radius: 12px;
+    overflow: hidden;
 }

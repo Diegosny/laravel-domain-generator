@@ -1,56 +1,16 @@
 # Troubleshooting
 
-Esta página reúne os erros mais comuns encontrados durante o uso da biblioteca.
+## JWT Login Error
 
----
+**Error**
 
-## JWT retorna 401
+> `EloquentUserProvider::validateCredentials()`
 
-### Sintoma
+### Cause
 
-```json
-{
-  "message":"Unauthenticated."
-}
-```
+The User model extended `Model` instead of `Authenticatable`.
 
-### Solução
-
-Execute:
-
-```bash
-php artisan jwt:secret
-```
-
-Verifique também:
-
-```php
-'guards'=>[
-    'api'=>[
-        'driver'=>'jwt'
-    ]
-];
-```
-
----
-
-## User precisa estender Authenticatable
-
-### Erro
-
-```
-validateCredentials()
-```
-
-### Solução
-
-Troque:
-
-```php
-class User extends Model
-```
-
-por:
+### Fix
 
 ```php
 class User extends Authenticatable
@@ -58,102 +18,50 @@ class User extends Authenticatable
 
 ---
 
-## Resource retorna vazio
+## GitHub Pages 404
 
-### Sintoma
+### Cause
 
-```json
-{
-  "data":[]
-}
-```
+GitHub Pages wasn't configured.
 
-### Causa
+### Fix
 
-O Controller estava aplicando o Resource sobre um Model já transformado.
-
-### Solução
-
-Atualize para a versão mais recente do `AbstractController`.
+Settings → Pages → Source → GitHub Actions.
 
 ---
 
-## Call to undefined relationship
+## Route file not found
 
-### Erro
+### Cause
 
-```
-Call to undefined relationship
-```
+Wrong package path.
 
-### Causa
-
-Relacionamento inexistente.
-
-### Solução
-
-Utilize apenas relações válidas.
-
----
-
-## make:domain não encontra stubs
-
-### Linux
-
-O Linux diferencia:
-
-```
-Controller.stub
-```
-
-de
-
-```
-controller.stub
-```
-
-Padronize todos os stubs em minúsculo.
-
----
-
-## Hash não funciona
-
-Verifique:
+### Fix
 
 ```php
-use HasHash;
-```
-
-e a migration:
-
-```php
-$table->char('hash',26)->unique();
+__DIR__.'/../../routes/api.php'
 ```
 
 ---
 
-## Rotas de autenticação não aparecem
+## PHPStan LARAVEL_VERSION
 
-Execute:
+### Cause
 
-```bash
-php artisan route:list
-```
+Larastan was executed inside the package instead of a Laravel application.
 
-Confirme:
+### Fix
 
-```
-POST /api/auth/login
-```
+Use PHPStan inside the package and Larastan in integration tests.
 
 ---
 
-## Limpeza de cache
+## Composer PSR-4
 
-Sempre que alterar Providers ou configurações:
+### Fix
+
+Run:
 
 ```bash
-composer dump-autoload
-
-php artisan optimize:clear
+composer dump-autoload --optimize --strict-psr
 ```

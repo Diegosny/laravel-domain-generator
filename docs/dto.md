@@ -1,61 +1,75 @@
-# DTO (Data Transfer Object)
+# DTO
 
-Os DTOs são responsáveis por transportar dados entre o Controller e o Service.
+<VersionBadge version="v1.1.0"/>
 
-Eles eliminam dependência direta do Request dentro do domínio.
+Data Transfer Objects (DTOs) provide a clean way to move validated data across your application.
 
-## Criando um DTO
+Instead of passing `Request` objects into Services, generated domains use strongly typed DTOs.
+
+---
+
+## Why DTOs?
+
+- Separate HTTP from business logic
+- Strong typing
+- Cleaner Services
+- Easier testing
+
+---
+
+## Generated DTO
+
+Example:
 
 ```php
-final class UserDTO extends AbstractDTO
+class UserDTO extends AbstractDTO
 {
     public function __construct(
-        public readonly string $name,
+        public readonly string $nome,
         public readonly string $email,
-        public readonly ?string $phone = null,
+        public readonly bool $ativo
     ) {}
 }
 ```
 
-## Configurando no Controller
+---
+
+## Creating from Request
 
 ```php
-protected ?string $requestDto = UserDTO::class;
+$dto = UserDTO::fromRequest($request);
 ```
 
-## Fluxo
+This extracts validated values automatically.
 
-<svg viewBox="0 0 260 220" width="100%" role="img" aria-label="Fluxo do DTO">
-  <rect x="50" y="20" width="160" height="36" rx="10" fill="none" stroke="currentColor"/>
-  <text x="130" y="43" text-anchor="middle" font-size="13">FormRequest</text>
-  <path d="M130 56 V84" stroke="currentColor"/>
-  <rect x="50" y="84" width="160" height="36" rx="10" fill="none" stroke="currentColor"/>
-  <text x="130" y="107" text-anchor="middle" font-size="13">DTO</text>
-  <path d="M130 120 V148" stroke="currentColor"/>
-  <rect x="50" y="148" width="160" height="36" rx="10" fill="none" stroke="currentColor"/>
-  <text x="130" y="171" text-anchor="middle" font-size="13">Service</text>
-</svg>
+---
 
-## Salvando
+## Passing to Service
 
 ```php
-$this->service->saveDto($dto);
+$this->service->create($dto);
 ```
 
-Internamente:
+---
 
-```text
-DTO
- ↓
-toArray()
- ↓
-Repository
+## Converting to Array
+
+```php
+$dto->toArray();
 ```
 
-## Benefícios
+Output:
 
-- Tipagem forte.
-- Código mais previsível.
-- Independência da camada HTTP.
-- Melhor autocomplete.
-- Facilita testes.
+```php
+[
+    'nome' => 'John',
+    'email' => 'john@example.com',
+    'ativo' => true
+]
+```
+
+<Callout type="success">
+
+Generated Services are designed to receive DTOs instead of Request objects.
+
+</Callout>

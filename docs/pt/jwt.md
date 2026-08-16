@@ -1,31 +1,31 @@
-# JWT Authentication
+# Autenticação JWT
 
 <VersionBadge version="v1.1.0"/>
 
-Built-in authentication powered by **php-open-source-saver/jwt-auth**.
+Autenticação integrada utilizando **php-open-source-saver/jwt-auth**.
 
 ---
 
-## Authentication Flow
+## Fluxo
 
 ```text
 Login
    │
    ▼
-JWT Token
+JWT
    │
    ▼
-Bearer Authorization
+Bearer Token
    │
    ▼
-Protected Routes
+Rotas Protegidas
 ```
 
 ---
 
-## Available Endpoints
+## Endpoints
 
-| Method | Endpoint |
+| Método | Endpoint |
 |---------|----------|
 | <ApiMethod method="POST"/> | `/api/auth/login` |
 | <ApiMethod method="GET"/> | `/api/auth/me` |
@@ -38,16 +38,16 @@ Protected Routes
 
 <ApiMethod method="POST"/> `/api/auth/login`
 
-Request:
+Requisição:
 
 ```json
 {
-  "email": "john@example.com",
-  "password": "secret"
+  "email": "diego@email.com",
+  "password": "123456"
 }
 ```
 
-Successful response:
+Resposta:
 
 ```json
 {
@@ -63,38 +63,29 @@ Successful response:
 
 <Callout type="success">
 
-Use the returned token in the `Authorization: Bearer` header.
+Utilize o token retornado no header `Authorization: Bearer`.
 
 </Callout>
 
 ---
 
-## Current User
+## Usuário autenticado
 
 <ApiMethod method="GET"/> `/api/auth/me`
 
-Headers:
+Header:
 
 ```text
-Authorization: Bearer YOUR_TOKEN
-```
-
-Response:
-
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com"
-}
+Authorization: Bearer TOKEN
 ```
 
 ---
 
-## Refresh Token
+## Refresh
 
 <ApiMethod method="POST"/> `/api/auth/refresh`
 
-Returns a new JWT without requiring another login.
+Renova o token JWT.
 
 ---
 
@@ -102,4 +93,4 @@ Returns a new JWT without requiring another login.
 
 <ApiMethod method="POST"/> `/api/auth/logout`
 
-Invalidates the current token.
+Invalida o token atual.

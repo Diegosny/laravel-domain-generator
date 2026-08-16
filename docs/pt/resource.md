@@ -1,45 +1,43 @@
-# API Resources
+# Resources
 
 <VersionBadge version="v1.1.0"/>
 
-Generated Resources standardize API serialization.
+Os Resources gerados padronizam a serialização da API.
 
-Every generated domain includes a Resource class ready for production.
+Todo domínio já nasce com um Resource pronto para produção.
 
 ---
 
-## Example
+## Exemplo
 
 ```php
 return new UserResource($user);
 ```
 
-Response:
+Resposta:
 
 ```json
 {
   "public_id": "01JXYZABCDEF123456789",
-  "nome": "John Doe",
-  "email": "john@example.com",
+  "nome": "João",
+  "email": "joao@email.com",
   "ativo": true
 }
 ```
 
 ---
 
-## Collections
+## Coleções
 
 ```php
 return UserResource::collection($users);
 ```
 
-Produces a consistent collection response.
-
 ---
 
-## Customizing
+## Personalização
 
-Simply edit the generated Resource.
+Basta editar o Resource gerado.
 
 ```php
 public function toArray($request): array
@@ -54,6 +52,6 @@ public function toArray($request): array
 
 <Callout type="info">
 
-Resources hide internal IDs by default, exposing only public identifiers.
+Os Resources ocultam IDs internos e expõem apenas identificadores públicos.
 
 </Callout>

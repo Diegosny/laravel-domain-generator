@@ -1,24 +1,24 @@
-# Installation
+# Instalação
 
 <VersionBadge version="v1.1.0"/>
 
-Installing the package takes only a few minutes.
+A instalação leva apenas alguns minutos.
 
 ---
 
-## Requirements
+## Requisitos
 
-| Requirement | Version |
-|------------|---------|
+| Requisito | Versão |
+|-----------|---------|
 | PHP | 8.2+ |
-| Laravel | 11, 12 or 13 |
-| Composer | Latest |
+| Laravel | 11, 12 ou 13 |
+| Composer | Última versão |
 
 ---
 
-## Install
+## Instalação
 
-Run:
+Execute:
 
 ```bash
 composer require domain/laravel-domain-generator
@@ -26,19 +26,19 @@ composer require domain/laravel-domain-generator
 
 <Callout type="info">
 
-The package supports Laravel 11, 12 and 13.
+A biblioteca oferece suporte ao Laravel 11, 12 e 13.
 
 </Callout>
 
 ---
 
-## Publish Configuration
+## Publicar Configuração
 
 ```bash
 php artisan vendor:publish --provider="Domain\DomainGenerator\DomainGeneratorServiceProvider"
 ```
 
-This publishes the configuration file:
+Será criado:
 
 ```text
 config/domain-generator.php
@@ -46,7 +46,7 @@ config/domain-generator.php
 
 ---
 
-## Generate JWT Secret
+## Gerar JWT Secret
 
 ```bash
 php artisan jwt:secret
@@ -54,19 +54,19 @@ php artisan jwt:secret
 
 <Callout type="success">
 
-Your application is now ready to generate domains and use the built-in authentication endpoints.
+Sua aplicação já está pronta para gerar domínios e utilizar os endpoints de autenticação.
 
 </Callout>
 
 ---
 
-## Generate your first domain
+## Gerar o primeiro domínio
 
 ```bash
 php artisan make:domain User
 ```
 
-Generated structure:
+Estrutura gerada:
 
 ```text
 app/
@@ -84,6 +84,6 @@ app/
 
 ---
 
-## Next Step
+## Próximo passo
 
-Continue to **JWT Authentication**.
+Continue para **Autenticação JWT**.

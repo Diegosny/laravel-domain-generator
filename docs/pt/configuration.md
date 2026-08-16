@@ -1,12 +1,12 @@
-# Configuration
+# Configuração
 
 <VersionBadge version="v1.1.0"/>
 
-Laravel Domain Generator can be customized through its configuration file.
+A biblioteca pode ser personalizada através do arquivo de configuração.
 
 ---
 
-## Publish
+## Publicar Configuração
 
 ```bash
 php artisan vendor:publish --provider="Domain\DomainGenerator\DomainGeneratorServiceProvider"
@@ -14,7 +14,7 @@ php artisan vendor:publish --provider="Domain\DomainGenerator\DomainGeneratorSer
 
 ---
 
-## Configuration File
+## Arquivo
 
 ```text
 config/domain-generator.php
@@ -22,7 +22,7 @@ config/domain-generator.php
 
 ---
 
-## Authentication
+## Autenticação
 
 ```php
 'auth' => [
@@ -33,7 +33,7 @@ config/domain-generator.php
 
 ---
 
-## Public IDs
+## Identificadores Públicos
 
 ```php
 'hash' => [
@@ -41,7 +41,7 @@ config/domain-generator.php
 ],
 ```
 
-Supported values:
+Valores disponíveis:
 
 - `ulid`
 - `uuid`
@@ -51,10 +51,10 @@ Supported values:
 
 ## Namespace
 
-Generated classes respect your application's namespace automatically.
+As classes geradas respeitam automaticamente o namespace da aplicação.
 
 <Callout type="info">
 
-Most projects work perfectly with the default configuration.
+Na maioria dos projetos a configuração padrão já é suficiente.
 
 </Callout>

@@ -1,4 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
-  <rect width="120" height="120" rx="24" fill="#E11D48"/>
-  <path d="M35 30 L85 30 L60 90 Z" fill="white"/>
+  <defs>
+    <linearGradient id="brand" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF2D20"/>
+      <stop offset="100%" stop-color="#E11D48"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="120" height="120" rx="28" fill="url(#brand)"/>
+
+  <path d="M60 22L86 37V67C86 84 74 95 60 100C46 95 34 84 34 67V37L60 22Z"
+        fill="white"/>
+
+  <path d="M60 38L72 45V61C72 70 66 77 60 80C54 77 48 70 48 61V45L60 38Z"
+        fill="#FF2D20"/>
 </svg>

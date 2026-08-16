@@ -1,14 +1,14 @@
-# Municipio Example
+# Exemplo Município
 
 <VersionBadge version="v1.1.0"/>
 
-This example demonstrates relationships using the generated Repository Pattern.
+Este exemplo demonstra relacionamentos utilizando o Repository Pattern.
 
 ---
 
-## Scenario
+## Cenário
 
-A `User` belongs to a `Municipio`.
+Um `User` pertence a um `Municipio`.
 
 ```text
 Municipio
@@ -41,12 +41,12 @@ $this->repository
 
 ---
 
-## Response
+## Resposta
 
 ```json
 {
   "public_id": "01JXYZABCDEF",
-  "nome": "John",
+  "nome": "João",
   "municipio": {
     "nome": "São Paulo"
   }
@@ -55,6 +55,6 @@ $this->repository
 
 <Callout type="success">
 
-Repositories support eager loading out of the box.
+O eager loading funciona automaticamente.
 
 </Callout>

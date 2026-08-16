@@ -1,12 +1,12 @@
-# Authentication Example
+# Exemplo de Autenticação
 
 <VersionBadge version="v1.1.0"/>
 
-Complete JWT authentication flow.
+Fluxo completo de autenticação JWT.
 
 ---
 
-## Flow
+## Fluxo
 
 ```text
 Login
@@ -18,7 +18,7 @@ JWT
 Bearer Token
    │
    ▼
-Protected Routes
+Rotas Protegidas
 ```
 
 ---
@@ -29,12 +29,12 @@ Protected Routes
 
 ```json
 {
-  "email": "john@example.com",
-  "password": "secret123"
+  "email": "diego@email.com",
+  "password": "12345678"
 }
 ```
 
-Response:
+Resposta:
 
 ```json
 {
@@ -49,7 +49,7 @@ Response:
 
 ---
 
-## Current User
+## Usuário Atual
 
 <ApiMethod method="GET"/> `/api/auth/me`
 
@@ -65,7 +65,7 @@ Authorization: Bearer TOKEN
 
 <ApiMethod method="POST"/> `/api/auth/refresh`
 
-Returns a fresh JWT.
+Renova o JWT.
 
 ---
 
@@ -73,10 +73,10 @@ Returns a fresh JWT.
 
 <ApiMethod method="POST"/> `/api/auth/logout`
 
-Invalidates the current token.
+Invalida o token.
 
 <Callout type="success">
 
-Authentication endpoints are generated and follow the same response format as the rest of the package.
+Os endpoints seguem o mesmo padrão de resposta utilizado em toda a biblioteca.
 
 </Callout>

@@ -1,18 +1,18 @@
-# Complete CRUD
+# CRUD Completo
 
 <VersionBadge version="v1.1.0"/>
 
-Build a complete CRUD using Laravel Domain Generator.
+Crie um CRUD completo utilizando Laravel Domain Generator.
 
 <Callout type="info">
 
-This example demonstrates the full workflow from generation to a working API.
+Este exemplo demonstra todo o fluxo, desde a geração até uma API funcionando.
 
 </Callout>
 
 ---
 
-## What will be generated?
+## O que será gerado?
 
 - Model
 - Migration
@@ -22,11 +22,11 @@ This example demonstrates the full workflow from generation to a working API.
 - Service
 - Repository
 - Resource
-- API Routes
+- Rotas
 
 ---
 
-## Generate the domain
+## Gerando o domínio
 
 ```bash
 php artisan make:domain User
@@ -34,7 +34,7 @@ php artisan make:domain User
 
 ---
 
-## Generated structure
+## Estrutura criada
 
 ```text
 app/
@@ -52,7 +52,7 @@ app/
 
 ---
 
-## Generated Controller
+## Controller
 
 ```php
 public function index()
@@ -67,7 +67,7 @@ public function index()
 
 ---
 
-## Generated Service
+## Service
 
 ```php
 public function create(UserDTO $dto)
@@ -80,7 +80,7 @@ public function create(UserDTO $dto)
 
 ---
 
-## Generated Repository
+## Repository
 
 ```php
 public function model(): string
@@ -91,21 +91,21 @@ public function model(): string
 
 ---
 
-## Create Request
+## Criando um usuário
 
 <ApiMethod method="POST"/> `/api/users`
 
-Request:
+Requisição:
 
 ```json
 {
-  "nome": "John Doe",
-  "email": "john@example.com",
-  "password": "secret123"
+  "nome": "João",
+  "email": "joao@email.com",
+  "password": "12345678"
 }
 ```
 
-Response:
+Resposta:
 
 ```json
 {
@@ -113,21 +113,21 @@ Response:
   "status": 201,
   "data": {
     "public_id": "01JXYZABCDEF123456789",
-    "nome": "John Doe",
-    "email": "john@example.com"
+    "nome": "João",
+    "email": "joao@email.com"
   }
 }
 ```
 
 <Callout type="success">
 
-The generated CRUD already follows the DDD architecture with Services, Repositories and DTOs connected.
+O CRUD gerado já segue a arquitetura DDD completa.
 
 </Callout>
 
 ---
 
-## Request Flow
+## Fluxo
 
 ```text
 Request
@@ -151,5 +151,5 @@ Model
 Resource
    │
    ▼
-JSON Response
+JSON
 ```

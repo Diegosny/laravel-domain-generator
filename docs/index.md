@@ -3,15 +3,16 @@ layout: home
 
 hero:
   name: Laravel Domain Generator
-  text: DDD + Clean Architecture para Laravel
-  tagline: Gere Controllers, DTOs, Services, Repositories, Resources e Migrations em segundos.
+  text: Build Laravel domains with DDD and Clean Architecture
+  tagline: Generate Controllers, DTOs, Services, Repositories, JWT-ready APIs and Public Identifiers with a single Artisan command.
+
   image:
     src: /logo.svg
     alt: Laravel Domain Generator
 
   actions:
     - theme: brand
-      text: Começar →
+      text: Get Started
       link: /getting-started
 
     - theme: alt
@@ -19,82 +20,118 @@ hero:
       link: https://github.com/Diegosny/laravel-domain-generator
 
 features:
-  - icon: 🏛️
-    title: Domain Driven Design
-    details: Estruture sua aplicação por domínio desde o primeiro commit.
+  - title: DDD Architecture
+    details: Organize Controllers, Services, Repositories and DTOs from day one.
 
-  - icon: 🚀
-    title: CRUD Automatizado
-    details: Gere Controllers, Services, DTOs, Repositories, Requests e Migrations.
+  - title: One Command
+    details: Generate an entire Laravel domain with a single Artisan command.
 
-  - icon: 🔐
-    title: JWT Ready
-    details: Login, Logout, Refresh e Me prontos para uso.
+  - title: JWT Ready
+    details: Authentication endpoints already integrated.
 
-  - icon: 🔑
-    title: Identificadores Públicos
-    details: ULID, UUID e UUID32 configuráveis.
+  - title: Public Identifiers
+    details: Native support for ULID, UUID and UUID32.
 
-  - icon: 📦
-    title: Repository Pattern
-    details: Abstrações reutilizáveis sobre o Eloquent.
+  - title: Repository Pattern
+    details: Generic repositories with pagination, filters and relationships.
 
-  - icon: 🎯
-    title: Resources Automáticos
-    details: Collections, paginação e Models transformados automaticamente.
+  - title: Professional CI/CD
+    details: GitHub Actions, Releases, PHPStan, Laravel Pint and automatic documentation deployment.
 ---
 
-# Laravel Domain Generator
+<HeroDashboard/>
 
-Uma biblioteca para Laravel desenvolvida para automatizar e padronizar aplicações seguindo **DDD** e **Clean Architecture**.
+> Built for developers who care about architecture, maintainability and automation.
 
-## Instalação rápida
+## Quick Start
+
+Install the package.
 
 ```bash
 composer require domain/laravel-domain-generator
-php artisan jwt:secret
+```
+
+Generate your first domain.
+
+```bash
 php artisan make:domain User
 ```
 
-## Fluxo da aplicação
+<Callout type="success">
+
+Your first complete Laravel domain is generated in seconds.
+
+</Callout>
+
+---
+
+## Why Laravel Domain Generator?
+
+Instead of manually creating Controllers, DTOs, Services, Repositories and authentication boilerplate, the package generates a scalable Domain Driven Design structure automatically.
+
+Perfect for projects using:
+
+- Domain Driven Design (DDD)
+- Clean Architecture
+- Repository Pattern
+- REST APIs
+- JWT Authentication
+- Public Identifiers
+
+---
+
+## Trusted Development Workflow
+
+The package follows an automated quality pipeline inspired by Laravel, Filament and Spatie.
+
+| Feature | Description |
+|---------|-------------|
+| 🚀 Automated Releases | Semantic versioning with GitHub Releases |
+| 📖 Live Documentation | Automatic deployment with VitePress |
+| 🔒 Security | Composer Audit and CodeQL |
+| ⚙️ Code Quality | Laravel Pint and PHPStan |
+| 📦 Package Validation | Composer validation on every push |
+| 🧪 CI Pipeline | Lint, Build and Documentation deployment |
+
+---
+
+## Generated Architecture
+
+The package generates a structure similar to this.
 
 ```text
-HTTP Request
-      │
-      ▼
- FormRequest
-      │
-      ▼
-     DTO
-      │
-      ▼
- Controller
-      │
-      ▼
-   Service
-      │
-      ▼
- Repository
-      │
-      ▼
-    Model
-      │
-      ▼
-  Resource
-      │
-      ▼
- JSON Response
+app/
+├── Domain/
+│   └── User/
+│       ├── DTO/
+│       ├── Repositories/
+│       └── Service/
+├── Http/
+│   ├── Controllers/
+│   ├── Requests/
+│   └── Resources/
+└── Models/
 ```
 
-## Principais recursos
+Every generated file follows Laravel conventions while keeping business logic isolated inside the Domain layer.
 
-- Estrutura baseada em DDD
-- DTO automático
-- Repository Pattern
-- Resources automáticos
-- JWT integrado
-- Hash público (ULID/UUID)
-- Paginação automática
-- Relacionamentos seguros
-- GitHub Actions
-- Compatível com Laravel 11, 12 e 13
+---
+
+## Why developers choose this package
+
+| Feature | Benefit |
+|---------|---------|
+| 🧱 **DDD-first** | Domain-oriented architecture from day one. |
+| 🔐 **JWT Ready** | Authentication endpoints already included. |
+| 🆔 **Public IDs** | ULID, UUID and UUID32 support. |
+| 📦 **Generic Repository** | Pagination, filters and relationships built in. |
+| 🏗️ **Clean Architecture** | Business logic isolated from HTTP. |
+| 🚀 **Professional CI/CD** | GitHub Actions, Releases and automated documentation. |
+
+---
+
+## Next Step
+
+Continue with the Installation guide and generate your first production-ready Laravel domain.
+
+**→ Next:** [Installation](/installation)
