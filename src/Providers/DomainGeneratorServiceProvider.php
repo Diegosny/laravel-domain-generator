@@ -10,7 +10,7 @@ class DomainGeneratorServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../../config/domain-generator.php',
+            __DIR__.'/../../config/domain-generator.php',
             'domain-generator'
         );
     }
@@ -18,11 +18,11 @@ class DomainGeneratorServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadRoutesFrom(
-            __DIR__ . '/../../routes/api.php'
+            __DIR__.'/../../routes/api.php'
         );
 
         $this->publishes([
-            __DIR__ . '/../../config/domain-generator.php' => config_path('domain-generator.php'),
+            __DIR__.'/../../config/domain-generator.php' => config_path('domain-generator.php'),
         ], 'domain-generator-config');
 
         if ($this->app->runningInConsole()) {

@@ -1,0 +1,17 @@
+name: Setup PHP Environment
+
+description: Setup PHP and Composer dependencies
+
+runs:
+  using: composite
+
+  steps:
+    - uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.3
+        coverage: none
+
+    - uses: ramsey/composer-install@v3
+
+    - shell: bash
+      run: composer dump-autoload -o

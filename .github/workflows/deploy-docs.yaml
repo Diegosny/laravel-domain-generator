@@ -1,12 +1,9 @@
-name: Deploy VitePress
+name: Deploy • VitePress
 
 on:
-
   push:
     branches:
       - master
-
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,37 +12,24 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
 
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-
-      - uses: actions/configure-pages@v4
-
-      - run: npm ci
+      - uses: ./.github/actions/setup-node
 
       - run: npm run docs:build
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: docs/.vitepress/dist
 
   deploy:
-
     needs: build
 
     runs-on: ubuntu-latest
@@ -55,6 +39,5 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-
       - id: deployment
         uses: actions/deploy-pages@v4

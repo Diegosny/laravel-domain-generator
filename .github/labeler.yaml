@@ -1,0 +1,8 @@
+documentation:
+  - docs/**
+
+php:
+  - src/**
+
+github-actions:
+  - .github/**

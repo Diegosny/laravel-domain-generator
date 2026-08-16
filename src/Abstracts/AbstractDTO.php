@@ -21,7 +21,7 @@ abstract class AbstractDTO implements DTOInterface
         $constructor = $reflection->getConstructor();
 
         if ($constructor === null) {
-            return new static();
+            return new static;
         }
 
         $arguments = [];

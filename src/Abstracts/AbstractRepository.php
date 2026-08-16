@@ -195,7 +195,7 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Update model.
      */
-    public function update(Model $entity,array $data): Model 
+    public function update(Model $entity, array $data): Model
     {
         $entity->fill($data);
 
@@ -280,8 +280,7 @@ abstract class AbstractRepository implements RepositoryInterface
                 'search',
             ])
             ->filter(
-                fn ($value) =>
-                    $value !== null &&
+                fn ($value) => $value !== null &&
                     $value !== ''
             )
             ->all();
@@ -302,11 +301,10 @@ abstract class AbstractRepository implements RepositoryInterface
 
         return collect($relations)
             ->filter(
-                fn ($relation) =>
-                    method_exists(
-                        $this->model,
-                        $relation
-                    )
+                fn ($relation) => method_exists(
+                    $this->model,
+                    $relation
+                )
             )
             ->values()
             ->all();

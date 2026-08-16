@@ -1,0 +1,39 @@
+name: Bug Report
+description: Reporte um problema encontrado na biblioteca.
+title: "[Bug]: "
+labels:
+  - bug
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar um problema.
+
+  - type: input
+    id: laravel
+    attributes:
+      label: Versão do Laravel
+      placeholder: "13.x"
+
+  - type: input
+    id: php
+    attributes:
+      label: Versão do PHP
+      placeholder: "8.3"
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrição do problema
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Como reproduzir
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      render: shell

@@ -1,0 +1,47 @@
+:root {
+  --vp-c-brand-1: #e11d48;
+  --vp-c-brand-2: #be123c;
+  --vp-c-brand-3: #9f1239;
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(
+    120deg,
+    #e11d48,
+    #f97316
+  );
+}
+
+.VPHomeHero .image {
+  filter: drop-shadow(0 0 40px rgba(225, 29, 72, 0.35));
+}
+
+.VPFeature {
+  border: 1px solid var(--vp-c-divider);
+  transition: all .25s ease;
+}
+
+.VPFeature:hover {
+  transform: translateY(-4px);
+  border-color: var(--vp-c-brand-1);
+}
+
+.vp-doc table {
+  display: table;
+  width: 100%;
+}
+
+.vp-doc img {
+  border-radius: 12px;
+}
+
+.vp-doc svg {
+  margin: 24px auto;
+}
+
+.vp-doc h2 {
+  margin-top: 48px;
+}
+
+.vp-doc h3 {
+  margin-top: 32px;
+}

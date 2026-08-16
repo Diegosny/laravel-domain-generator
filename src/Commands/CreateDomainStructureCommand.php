@@ -25,7 +25,7 @@ class CreateDomainStructureCommand extends Command
 
     private function getStubsPath(): string
     {
-        return dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Stubs';
+        return dirname(__DIR__).DIRECTORY_SEPARATOR.'Stubs';
     }
 
     public function handle(): int
@@ -150,7 +150,7 @@ class CreateDomainStructureCommand extends Command
         string $label
     ): void {
 
-        $fullPath = $path . DIRECTORY_SEPARATOR . $fileName;
+        $fullPath = $path.DIRECTORY_SEPARATOR.$fileName;
 
         $this->info("Criando {$label} {$fileName}...");
 
@@ -158,6 +158,7 @@ class CreateDomainStructureCommand extends Command
 
         if (File::exists($fullPath) && ! $force) {
             $this->warn("{$fileName} já existe.");
+
             return;
         }
 
@@ -173,8 +174,8 @@ class CreateDomainStructureCommand extends Command
     private function loadStub(string $stub): string
     {
         $path = $this->getStubsPath()
-            . DIRECTORY_SEPARATOR
-            . strtolower($stub);
+            .DIRECTORY_SEPARATOR
+            .strtolower($stub);
 
         if (! File::exists($path)) {
             throw new RuntimeException(
@@ -196,8 +197,8 @@ class CreateDomainStructureCommand extends Command
                 [
                     "{{ {$key} }}",
                     "{{{$key}}}",
-                    '$' . strtoupper($key),
-                    'Dummy' . ucfirst($key),
+                    '$'.strtoupper($key),
+                    'Dummy'.ucfirst($key),
                 ],
                 $value,
                 $stub

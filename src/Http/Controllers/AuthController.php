@@ -5,7 +5,6 @@ namespace Domain\DomainGenerator\Http\Controllers;
 use Domain\DomainGenerator\Http\Requests\LoginRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
-use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
