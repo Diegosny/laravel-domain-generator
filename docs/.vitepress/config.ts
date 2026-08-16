@@ -1,17 +1,42 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
+  // GitHub Pages
+  base: '/laravel-domain-generator/',
+
   title: 'Laravel Domain Generator',
   description: 'Generate Laravel domains following DDD and Clean Architecture.',
 
   lang: 'en-US',
 
   head: [
-    ['link', { rel: 'icon', href: '/favicon.svg' }],
+    ['link', { rel: 'icon', href: '/laravel-domain-generator/favicon.svg' }],
+
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Laravel Domain Generator' }],
-    ['meta', { property: 'og:description', content: 'Generate Laravel domains following DDD and Clean Architecture.' }],
-    ['meta', { property: 'og:image', content: '/og-image.png' }]
+    [
+      'meta',
+      {
+        property: 'og:description',
+        content: 'Generate Laravel domains following DDD and Clean Architecture.'
+      }
+    ],
+    [
+      'meta',
+      {
+        property: 'og:image',
+        content:
+          'https://diegosny.github.io/laravel-domain-generator/og-image.png'
+      }
+    ],
+
+    [
+      'meta',
+      {
+        name: 'twitter:card',
+        content: 'summary_large_image'
+      }
+    ]
   ],
 
   locales: {
@@ -20,6 +45,7 @@ export default defineConfig({
       lang: 'en-US',
       link: '/'
     },
+
     pt: {
       label: 'Português',
       lang: 'pt-BR',
@@ -42,7 +68,8 @@ export default defineConfig({
     ],
 
     editLink: {
-      pattern: 'https://github.com/Diegosny/laravel-domain-generator/edit/master/docs/:path',
+      pattern:
+        'https://github.com/Diegosny/laravel-domain-generator/edit/master/docs/:path',
       text: 'Edit this page on GitHub'
     },
 
@@ -61,39 +88,91 @@ export default defineConfig({
       copyright: 'Copyright © 2025 Diego Camilo'
     },
 
+    // ==========================
+    // ENGLISH NAVIGATION
+    // ==========================
+
     nav: [
       {
         text: 'Guide',
-        activeMatch: '^/(getting-started|installation|architecture|make-domain)',
+        activeMatch:
+          '^/(getting-started|installation|architecture|make-domain)',
         items: [
-          { text: 'Getting Started', link: '/getting-started' },
-          { text: 'Installation', link: '/installation' },
-          { text: 'Architecture', link: '/architecture' }
+          {
+            text: 'Getting Started',
+            link: '/getting-started'
+          },
+          {
+            text: 'Installation',
+            link: '/installation'
+          },
+          {
+            text: 'Architecture',
+            link: '/architecture'
+          }
         ]
       },
+
       {
         text: 'Examples',
         activeMatch: '^/examples/',
         items: [
-          { text: 'Complete CRUD', link: '/examples/complete-crud' },
-          { text: 'Municipio', link: '/examples/municipio' },
-          { text: 'Authentication', link: '/examples/auth' }
+          {
+            text: 'Complete CRUD',
+            link: '/examples/complete-crud'
+          },
+          {
+            text: 'Municipio',
+            link: '/examples/municipio'
+          },
+          {
+            text: 'Authentication',
+            link: '/examples/auth'
+          }
         ]
       },
+
       {
         text: 'API',
-        activeMatch: '^/(jwt|resources|dto)',
+        activeMatch:
+          '^/(abstract-controller|abstract-service|abstract-repository|jwt|resources|dto|hash|configuration)',
         items: [
-          { text: 'JWT', link: '/jwt' },
-          { text: 'Resources', link: '/resources' },
-          { text: 'DTO', link: '/dto' }
+          {
+            text: 'AbstractController',
+            link: '/abstract-controller'
+          },
+          {
+            text: 'AbstractService',
+            link: '/abstract-service'
+          },
+          {
+            text: 'AbstractRepository',
+            link: '/abstract-repository'
+          },
+          {
+            text: 'JWT',
+            link: '/jwt'
+          },
+          {
+            text: 'Resources',
+            link: '/resources'
+          },
+          {
+            text: 'DTO',
+            link: '/dto'
+          }
         ]
       },
+
       {
         text: 'GitHub ↗',
         link: 'https://github.com/Diegosny/laravel-domain-generator'
       }
     ],
+
+    // ==========================
+    // SIDEBARS
+    // ==========================
 
     sidebar: {
       '/': [
@@ -101,55 +180,117 @@ export default defineConfig({
           text: 'Getting Started',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/' },
-            { text: 'Getting Started', link: '/getting-started' },
-            { text: 'Installation', link: '/installation' }
+            {
+              text: 'Overview',
+              link: '/'
+            },
+            {
+              text: 'Getting Started',
+              link: '/getting-started'
+            },
+            {
+              text: 'Installation',
+              link: '/installation'
+            }
           ]
         },
+
         {
           text: 'Architecture',
           collapsed: false,
           items: [
-            { text: 'DDD & Clean Architecture', link: '/architecture' },
-            { text: 'make:domain', link: '/make-domain' }
+            {
+              text: 'DDD & Clean Architecture',
+              link: '/architecture'
+            },
+            {
+              text: 'make:domain',
+              link: '/make-domain'
+            }
           ]
         },
+
         {
           text: 'Core',
           collapsed: false,
           items: [
-            { text: 'AbstractController', link: '/abstract-controller' },
-            { text: 'AbstractService', link: '/abstract-service' },
-            { text: 'AbstractRepository', link: '/abstract-repository' },
-            { text: 'DTO', link: '/dto' },
-            { text: 'Resources', link: '/resources' }
+            {
+              text: 'AbstractController',
+              link: '/abstract-controller'
+            },
+            {
+              text: 'AbstractService',
+              link: '/abstract-service'
+            },
+            {
+              text: 'AbstractRepository',
+              link: '/abstract-repository'
+            },
+            {
+              text: 'DTO',
+              link: '/dto'
+            },
+            {
+              text: 'Resources',
+              link: '/resources'
+            }
           ]
         },
+
         {
           text: 'Resources',
           collapsed: false,
           items: [
-            { text: 'Public Identifiers', link: '/hash' },
-            { text: 'JWT', link: '/jwt' },
-            { text: 'Configuration', link: '/configuration' }
+            {
+              text: 'Public Identifiers',
+              link: '/hash'
+            },
+            {
+              text: 'JWT',
+              link: '/jwt'
+            },
+            {
+              text: 'Configuration',
+              link: '/configuration'
+            }
           ]
         },
+
         {
           text: 'Examples',
           collapsed: false,
           items: [
-            { text: 'Complete CRUD', link: '/examples/complete-crud' },
-            { text: 'Municipio', link: '/examples/municipio' },
-            { text: 'Authentication', link: '/examples/auth' }
+            {
+              text: 'Complete CRUD',
+              link: '/examples/complete-crud'
+            },
+            {
+              text: 'Municipio',
+              link: '/examples/municipio'
+            },
+            {
+              text: 'Authentication',
+              link: '/examples/auth'
+            }
           ]
         },
+
         {
           text: 'Project',
           collapsed: false,
           items: [
-            { text: 'Troubleshooting', link: '/troubleshooting' },
-            { text: 'Contributing', link: '/contributing' },
-            { text: 'Roadmap', link: '/roadmap' }
+            {
+              text: 'Troubleshooting',
+              link: '/troubleshooting'
+            },
+            {
+              text: 'Contributing',
+              link: '/contributing'
+            },
+            {
+              text: 'Roadmap',
+              link: '/roadmap'
+            }
           ]
         }
       ],
@@ -159,55 +300,117 @@ export default defineConfig({
           text: 'Começando',
           collapsed: false,
           items: [
-            { text: 'Visão Geral', link: '/pt/' },
-            { text: 'Primeiros Passos', link: '/pt/getting-started' },
-            { text: 'Instalação', link: '/pt/installation' }
+            {
+              text: 'Visão Geral',
+              link: '/pt/'
+            },
+            {
+              text: 'Primeiros Passos',
+              link: '/pt/getting-started'
+            },
+            {
+              text: 'Instalação',
+              link: '/pt/installation'
+            }
           ]
         },
+
         {
           text: 'Arquitetura',
           collapsed: false,
           items: [
-            { text: 'DDD e Clean Architecture', link: '/pt/architecture' },
-            { text: 'make:domain', link: '/pt/make-domain' }
+            {
+              text: 'DDD e Clean Architecture',
+              link: '/pt/architecture'
+            },
+            {
+              text: 'make:domain',
+              link: '/pt/make-domain'
+            }
           ]
         },
+
         {
           text: 'Core',
           collapsed: false,
           items: [
-            { text: 'AbstractController', link: '/pt/abstract-controller' },
-            { text: 'AbstractService', link: '/pt/abstract-service' },
-            { text: 'AbstractRepository', link: '/pt/abstract-repository' },
-            { text: 'DTO', link: '/pt/dto' },
-            { text: 'Resources', link: '/pt/resources' }
+            {
+              text: 'AbstractController',
+              link: '/pt/abstract-controller'
+            },
+            {
+              text: 'AbstractService',
+              link: '/pt/abstract-service'
+            },
+            {
+              text: 'AbstractRepository',
+              link: '/pt/abstract-repository'
+            },
+            {
+              text: 'DTO',
+              link: '/pt/dto'
+            },
+            {
+              text: 'Resources',
+              link: '/pt/resources'
+            }
           ]
         },
+
         {
           text: 'Recursos',
           collapsed: false,
           items: [
-            { text: 'Identificadores Públicos', link: '/pt/hash' },
-            { text: 'JWT', link: '/pt/jwt' },
-            { text: 'Configuração', link: '/pt/configuration' }
+            {
+              text: 'Identificadores Públicos',
+              link: '/pt/hash'
+            },
+            {
+              text: 'JWT',
+              link: '/pt/jwt'
+            },
+            {
+              text: 'Configuração',
+              link: '/pt/configuration'
+            }
           ]
         },
+
         {
           text: 'Exemplos',
           collapsed: false,
           items: [
-            { text: 'CRUD Completo', link: '/pt/examples/complete-crud' },
-            { text: 'Município', link: '/pt/examples/municipio' },
-            { text: 'Autenticação', link: '/pt/examples/auth' }
+            {
+              text: 'CRUD Completo',
+              link: '/pt/examples/complete-crud'
+            },
+            {
+              text: 'Município',
+              link: '/pt/examples/municipio'
+            },
+            {
+              text: 'Autenticação',
+              link: '/pt/examples/auth'
+            }
           ]
         },
+
         {
           text: 'Projeto',
           collapsed: false,
           items: [
-            { text: 'Troubleshooting', link: '/pt/troubleshooting' },
-            { text: 'Contribuindo', link: '/pt/contributing' },
-            { text: 'Roadmap', link: '/pt/roadmap' }
+            {
+              text: 'Troubleshooting',
+              link: '/pt/troubleshooting'
+            },
+            {
+              text: 'Contribuindo',
+              link: '/pt/contributing'
+            },
+            {
+              text: 'Roadmap',
+              link: '/pt/roadmap'
+            }
           ]
         }
       ]
