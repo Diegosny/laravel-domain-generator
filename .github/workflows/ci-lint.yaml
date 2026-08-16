@@ -6,11 +6,9 @@ on:
       - master
 
   pull_request:
-    branches:
-      - master
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   lint:
@@ -21,14 +19,11 @@ jobs:
 
       - uses: ./.github/actions/setup-php
 
-      - name: Validate Composer
+      - name: Validate composer.json
         run: composer validate --strict
 
-      - name: Laravel Pint
-        run: ./vendor/bin/pint
+      - name: Check PSR-4
+        run: composer dump-autoload --optimize --strict-psr
 
-      - name: Commit fixes
-        if: github.event_name == 'push'
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "style: apply Laravel Pint"
+      - name: Laravel Pint
+        run: ./vendor/bin/pint --test

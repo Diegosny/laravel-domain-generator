@@ -218,7 +218,7 @@ Every push to `master` automatically:
 
 The complete documentation is available at:
 
-> **https://SEU_USUARIO.github.io/laravel-domain-generator**
+> **https://Diegosny.github.io/laravel-domain-generator**
 
 It includes:
 
