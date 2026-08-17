@@ -122,8 +122,8 @@ export default defineConfig({
             link: '/examples/complete-crud'
           },
           {
-            text: 'Municipio',
-            link: '/examples/municipio'
+            text: 'Product',
+            link: '/examples/product-crud'
           },
           {
             text: 'Authentication',
@@ -265,8 +265,8 @@ export default defineConfig({
               link: '/examples/complete-crud'
             },
             {
-              text: 'Municipio',
-              link: '/examples/municipio'
+              text: 'Product',
+              link: '/examples/product-crud'
             },
             {
               text: 'Authentication',
@@ -385,8 +385,8 @@ export default defineConfig({
               link: '/pt/examples/complete-crud'
             },
             {
-              text: 'Município',
-              link: '/pt/examples/municipio'
+              text: 'Produto',
+              link: '/pt/examples/product-crud'
             },
             {
               text: 'Autenticação',
