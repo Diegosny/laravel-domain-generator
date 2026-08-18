@@ -1,0 +1,1 @@
+import{_ as a,o as t,c as o,a2 as r}from"./chunks/framework.B1KnIGM0.js";const _=JSON.parse('{"title":"Showcase","description":"","frontmatter":{},"headers":[],"relativePath":"showcase.md","filePath":"showcase.md"}'),s={name:"showcase.md"};function c(i,e,n,p,l,h){return t(),o("div",null,[...e[0]||(e[0]=[r("",7)])])}const u=a(s,[["render",c]]);export{_ as __pageData,u as default};

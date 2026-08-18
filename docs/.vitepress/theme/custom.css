@@ -1,0 +1,38 @@
+.VPSidebarGroup {
+    margin-bottom: 18px;
+}
+
+.VPSidebarGroup .title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--vp-c-text-2);
+}
+
+.VPSidebarItem.level-1 .text {
+    font-size: 14px;
+}
+
+.VPSidebarItem.is-active>.item>.text {
+    color: var(--vp-c-brand-1);
+    font-weight: 600;
+}
+
+.VPDoc h2 {
+    border-top: 1px solid var(--vp-c-divider);
+    padding-top: 28px;
+}
+
+.VPDoc h3 {
+    margin-top: 24px;
+}
+
+.VPDoc div[class*="language-"] {
+    border-radius: 12px;
+}
+
+.VPDoc table {
+    border-radius: 12px;
+    overflow: hidden;
+}

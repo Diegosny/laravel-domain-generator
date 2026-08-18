@@ -1,5 +1,21 @@
-/vendor
+# PHPStan
+.phpstan/
+
+# PHPUnit
 .phpunit.result.cache
-.idea
-.vscode
-*.env
+
+# VitePress
+docs/.vitepress/cache/
+
+# Node
+node_modules/
+
+#Vendor
+/vendor
+
+# IDEs
+.vscode/
+.idea/
+
+#EXTRAS
+/storage

@@ -1,0 +1,11 @@
+name: Question
+description: Faça uma pergunta sobre a biblioteca.
+title: "[Question]: "
+labels:
+  - question
+
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Sua pergunta

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://diegosny.github.io/laravel-domain-generator/sitemap.xml

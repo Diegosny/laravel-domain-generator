@@ -1,0 +1,9 @@
+name: Composer Install
+
+description: Install Composer dependencies
+
+runs:
+  using: composite
+
+  steps:
+    - uses: ramsey/composer-install@v3

@@ -22,10 +22,14 @@
   "extra": {
     "laravel": {
       "providers": [
-        "Domain\\DomainGenerator\\DomainGeneratorServiceProvider"
+        "Domain\\DomainGenerator\\Providers\\DomainGeneratorServiceProvider"
       ]
     }
   },
   "minimum-stability": "stable",
-  "prefer-stable": true
+  "prefer-stable": true,
+  "require-dev": {
+    "laravel/pint": "^1.30",
+    "phpstan/phpstan": "^2.2"
+  }
 }

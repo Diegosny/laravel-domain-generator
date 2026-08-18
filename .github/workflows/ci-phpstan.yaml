@@ -1,0 +1,23 @@
+name: CI • PHPStan
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  analyse:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: ./.github/actions/setup-php
+
+      - name: Run PHPStan
+        run: ./vendor/bin/phpstan analyse

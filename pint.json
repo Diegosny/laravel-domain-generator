@@ -1,0 +1,16 @@
+{
+    "preset": "laravel",
+
+    "rules": {
+        "ordered_imports": true,
+        "single_trait_insert_per_statement": true,
+        "trailing_comma_in_multiline": true,
+        "class_attributes_separation": {
+            "elements": {
+                "method": "one",
+                "property": "one"
+            }
+        },
+        "single_line_empty_body": true
+    }
+}

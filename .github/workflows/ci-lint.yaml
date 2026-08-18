@@ -1,0 +1,29 @@
+name: CI • Lint
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: ./.github/actions/setup-php
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Check PSR-4
+        run: composer dump-autoload --optimize --strict-psr
+
+      - name: Laravel Pint
+        run: ./vendor/bin/pint --test
