@@ -9,6 +9,8 @@ use ReflectionParameter;
 
 abstract class AbstractDTO implements DTOInterface
 {
+    use ReflectionNamedType;
+
     /**
      * Create a DTO from an array.
      *
