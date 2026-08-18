@@ -1,6 +1,6 @@
 <?php
 
-namespace DiegoSny\LaravelDomainGenerator\Support;
+namespace Domain\DomainGenerator\Support;
 
 class PublicIdGenerator
 {
@@ -8,20 +8,19 @@ class PublicIdGenerator
 
     public static function generate(string $prefix, int $length = 8): string
     {
-        return strtoupper($prefix).'_'.self::randomCode($length);
+        return strtoupper($prefix).'_'.self::random($length);
     }
 
-    private static function randomCode(int $length): string
+    private static function random(int $length): string
     {
-        $alphabet = self::ALPHABET;
-        $max = strlen($alphabet) - 1;
+        $result = '';
 
-        $code = '';
+        $max = strlen(self::ALPHABET) - 1;
 
         for ($i = 0; $i < $length; $i++) {
-            $code .= $alphabet[random_int(0, $max)];
+            $result .= self::ALPHABET[random_int(0, $max)];
         }
 
-        return $code;
+        return $result;
     }
 }
