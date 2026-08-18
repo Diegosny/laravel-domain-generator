@@ -5,12 +5,11 @@ namespace Domain\DomainGenerator\Abstracts;
 use Domain\DomainGenerator\Interfaces\DTOInterface;
 use InvalidArgumentException;
 use ReflectionClass;
+use ReflectionNamedType;
 use ReflectionParameter;
 
 abstract class AbstractDTO implements DTOInterface
 {
-    use ReflectionNamedType;
-
     /**
      * Create a DTO from an array.
      *
