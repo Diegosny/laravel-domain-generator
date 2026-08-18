@@ -49,7 +49,18 @@ abstract class AbstractDTO implements DTOInterface
          * The field was provided.
          */
         if (array_key_exists($name, $data)) {
-            return $data[$name];
+            $value = $data[$name];
+            $type = $parameter->getType();
+
+            if (
+                $type instanceof ReflectionNamedType &&
+                enum_exists($type->getName()) &&
+                is_subclass_of($type->getName(), \BackedEnum::class)
+            ) {
+                return $type->getName()::from($value);
+            }
+
+            return $value;
         }
 
         /*
