@@ -4,9 +4,6 @@ namespace DiegoSny\LaravelDomainGenerator\Support;
 
 class PublicIdGenerator
 {
-    /**
-     * Alfabeto sem caracteres ambíguos.
-     */
     private const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
     public static function generate(string $prefix, int $length = 8): string

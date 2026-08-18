@@ -30,7 +30,7 @@ trait HasHash
     }
 
     /**
-     * Usa o hash nas rotas automaticamente.
+     * Utiliza o hash nas rotas automaticamente.
      */
     public function getRouteKeyName(): string
     {
@@ -38,7 +38,11 @@ trait HasHash
     }
 
     /**
-     * Prefixo automático baseado na Model.
+     * Retorna o prefixo do hash.
+     *
+     * Se a Model possuir a propriedade $hashPrefix,
+     * ela será utilizada. Caso contrário, utiliza
+     * as três primeiras letras da classe.
      */
     public function getHashPrefix(): string
     {
