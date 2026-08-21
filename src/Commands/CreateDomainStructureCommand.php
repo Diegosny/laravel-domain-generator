@@ -44,10 +44,11 @@ class CreateDomainStructureCommand extends Command
 
         $this->createModelAndMigration($name, $force);
         $this->createController($name, $force);
-        $this->createRequest($name, $force);
-        $this->createDto($name, $force);
+        $this->createRequests($name, $force);
+        $this->createDtos($name, $force);
         $this->createService($name, $force);
         $this->createRepository($name, $force);
+        $this->createResource($name, $force);
 
         $this->newLine();
         $this->info("✨ Estrutura para {$name} criada com sucesso!");
@@ -190,54 +191,69 @@ class CreateDomainStructureCommand extends Command
     /**
      * Cria Request.
      */
-    private function createRequest(string $name, bool $force = false): void
+    private function createRequests(string $name, bool $force = false): void
     {
-        $requestName = "{$name}Request";
-
-        $this->info("Criando Request {$requestName}...");
-
-        $params = [
-            'name' => $requestName,
+         $requests = [
+            "Create{$name}Request",
+            "Update{$name}Request",
         ];
 
-        if ($force) {
-            $params['--force'] = true;
+        foreach ($requests as $request) {
+
+            $this->info("Criando Request {$request}...");
+
+            $params = ['name' => $request];
+
+            if ($force) {
+                $params['--force'] = true;
+            }
+
+            Artisan::call('make:request', $params);
+
+            $this->outputCommandOutput();
         }
-
-        Artisan::call('make:request', $params);
-
-        $this->outputCommandOutput();
     }
 
     /**
      * Cria DTO.
      */
-    private function createDto(string $name, bool $force = false): void
+    private function createDtos(string $name, bool $force = false): void
     {
         $domainFolder = $this->getDomainFolder();
 
         $path = app_path("{$domainFolder}/{$name}/DTO");
 
-        $fileName = "{$name}DTO.php";
-        $fullPath = "{$path}/{$fileName}";
-
-        $this->info("Criando DTO {$fileName}...");
-
         $this->ensureDirectoryExists($path);
 
-        if (File::exists($fullPath) && ! $force) {
-            $this->warn("O arquivo {$fileName} já existe. Ignorado.");
-            return;
+        $dtos = [
+            "Create{$name}DTO" => 'dto-create.stub',
+            "Update{$name}DTO" => 'dto-update.stub',
+        ];
+
+        foreach ($dtos as $class => $stubFile) {
+
+            $file = "{$path}/{$class}.php";
+
+            $this->info("Criando DTO {$class}...");
+
+            if (File::exists($file) && ! $force) {
+
+                $this->warn("{$class} já existe.");
+
+                continue;
+            }
+
+            $stub = $this->loadStub($stubFile);
+
+            File::put(
+                $file,
+                $this->replaceStubVariables($stub, [
+                    'name' => $name,
+                    'dto' => $class,
+                    'domainFolder' => $domainFolder,
+                ])
+            );
         }
-
-        $stub = $this->loadStub('dto.stub');
-
-        $content = $this->replaceStubVariables($stub, [
-            'name' => $name,
-            'domainFolder' => $domainFolder,
-        ]);
-
-        File::put($fullPath, $content);
     }
 
     /**
@@ -300,6 +316,36 @@ class CreateDomainStructureCommand extends Command
         ]);
 
         File::put($fullPath, $content);
+    }
+
+    private function createResource(string $name, bool $force = false): void 
+    {
+
+        $path = app_path('Http/Resources');
+
+        $fileName = "{$name}Resource.php";
+
+        $fullPath = "{$path}/{$fileName}";
+
+        $this->ensureDirectoryExists($path);
+
+        $this->info("Criando Resource {$fileName}...");
+
+        if (File::exists($fullPath) && ! $force) {
+
+            $this->warn("{$fileName} já existe.");
+
+            return;
+        }
+
+        $stub = $this->loadStub('resource.stub');
+
+        File::put(
+            $fullPath,
+            $this->replaceStubVariables($stub, [
+                'name' => $name,
+            ])
+        );
     }
 
     /**

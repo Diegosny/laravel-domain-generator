@@ -1,0 +1,10 @@
+<?php
+
+namespace App\{{ domainFolder }}\{{ name }}\DTO;
+
+use Domain\DomainGenerator\Abstracts\AbstractDTO;
+
+class {{ dto }} extends AbstractDTO
+{
+    //
+}
