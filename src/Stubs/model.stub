@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Models;
+
+use Domain\DomainGenerator\Traits\HasHash;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class {{ name }} extends Model
+{
+    use HasFactory;
+    use SoftDeletes;
+    use HasHash;
+
+    /**
+     * The table associated with the model.
+     */
+    protected $table = '{{ table }}';
+
+    /**
+     * Prefix used to generate the public hash.
+     *
+     * Example:
+     * PAT_8F3K2Q9X
+     */
+    protected string $hashPrefix = '{{ hashPrefix }}';
+
+    /**
+     * The attributes that are mass assignable.
+     */
+    protected $fillable = [
+        'hash',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     */
+    protected $hidden = [
+        'id',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+}
