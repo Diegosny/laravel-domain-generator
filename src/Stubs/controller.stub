@@ -2,18 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\{{ domainFolder }}\{{ name }}\DTO\{{ name }}DTO;
-use App\{{ domainFolder }}\{{ name }}\Service\{{ name }}Service;
-use App\Http\Requests\{{ name }}Request;
+use App\Domain\{{ name }}\DTO\Create{{ name }}DTO;
+use App\Domain\{{ name }}\DTO\Update{{ name }}DTO;
+use App\Domain\{{ name }}\Service\{{ name }}Service;
+use App\Http\Requests\Create{{ name }}Request;
+use App\Http\Requests\Update{{ name }}Request;
+use App\Http\Resources\{{ name }}Resource;
 use Domain\DomainGenerator\Abstracts\AbstractController;
 
-class {{ name }}Controller extends AbstractController
+class {{ controller }} extends AbstractController
 {
     protected mixed $service;
 
-    protected ?string $requestValidate = {{ name }}Request::class;
+    protected ?string $requestValidate = Create{{ name }}Request::class;
 
-    protected ?string $requestDto = {{ name }}DTO::class;
+    protected ?string $requestValidateUpdate = Update{{ name }}Request::class;
+
+    protected ?string $requestDto = Create{{ name }}DTO::class;
+
+    protected ?string $requestDtoUpdate = Update{{ name }}DTO::class;
+
+    protected ?string $resource = {{ name }}Resource::class;
 
     public function __construct({{ name }}Service $service)
     {

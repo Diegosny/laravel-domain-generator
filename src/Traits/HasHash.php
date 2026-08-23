@@ -2,56 +2,42 @@
 
 namespace Domain\DomainGenerator\Traits;
 
-use Illuminate\Support\Str;
+use Domain\DomainGenerator\Support\PublicIdGenerator;
 
 trait HasHash
 {
-    /**
-     * Generate UUID automatically.
-     */
     protected static function bootHasHash(): void
     {
         static::creating(function ($model) {
 
-            if ($model->hash) {
+            if (filled($model->hash)) {
                 return;
             }
 
-            $strategy = config(
-                'domain-generator.identifier.strategy',
-                'ulid'
+            do {
+                $hash = PublicIdGenerator::generate(
+                    $model->getHashPrefix(),
+                    config('domain-generator.public_id.length', 8)
+                );
+            } while (
+                $model->newQuery()
+                    ->where('hash', $hash)
+                    ->exists()
             );
 
-            $model->hash = match ($strategy) {
-
-                'uuid' => (string) Str::uuid(),
-
-                'uuid32' => str_replace(
-                    '-',
-                    '',
-                    (string) Str::uuid()
-                ),
-
-                'ulid' => (string) Str::ulid(),
-
-                default => (string) Str::ulid(),
-            };
+            $model->hash = $hash;
         });
     }
 
-    /**
-     * Use hash for Route Model Binding.
-     */
     public function getRouteKeyName(): string
     {
         return 'hash';
     }
 
-    /**
-     * Return public identifier.
-     */
-    public function getPublicIdentifier(): string
+    public function getHashPrefix(): string
     {
-        return $this->hash;
+        return property_exists($this, 'hashPrefix')
+            ? $this->hashPrefix
+            : strtoupper(substr(class_basename($this), 0, 3));
     }
 }

@@ -1,0 +1,21 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Domain\DomainGenerator\Traits\HasHash;
+
+class {{ model }} extends Model
+{
+    use HasFactory;
+    use HasHash;
+
+    protected $table = '{{ table }}';
+
+    protected string $hashPrefix = '{{ hashPrefix }}';
+
+    protected $fillable = [
+        //
+    ];
+}
