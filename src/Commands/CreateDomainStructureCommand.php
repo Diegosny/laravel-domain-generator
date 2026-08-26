@@ -13,7 +13,7 @@ class CreateDomainStructureCommand extends Command
                             {name : O nome do modelo (ex: User)}
                             {--force : Forçar a criação mesmo se já existirem arquivos}';
 
-    protected $description = 'Cria Model, Migration, Controller, Request, DTO, Service e Repository para um novo domínio';
+    protected $description = 'Cria Model, Migration, Controller, Requests, DTOs, Resource, Service e Repository para um novo domínio';
 
     /**
      * Retorna a pasta base dos domínios.
@@ -39,29 +39,80 @@ class CreateDomainStructureCommand extends Command
         $name = Str::studly($this->argument('name'));
         $force = (bool) $this->option('force');
 
-        $this->info("Iniciando a criação da estrutura para o domínio: {$name}");
-        $this->newLine();
-
-        $this->createModelAndMigration($name, $force);
-        $this->createController($name, $force);
-        $this->createRequests($name, $force);
-        $this->createDtos($name, $force);
-        $this->createService($name, $force);
-        $this->createRepository($name, $force);
-        $this->createResource($name, $force);
+        $this->info(
+            "Iniciando a criação da estrutura para o domínio: {$name}"
+        );
 
         $this->newLine();
-        $this->info("✨ Estrutura para {$name} criada com sucesso!");
+
+        $this->createModelAndMigration(
+            $name,
+            $force
+        );
+
+        $this->createController(
+            $name,
+            $force
+        );
+
+        $this->createRequests(
+            $name,
+            $force
+        );
+
+        $this->createDtos(
+            $name,
+            $force
+        );
+
+        $this->createResource(
+            $name,
+            $force
+        );
+
+        $this->createService(
+            $name,
+            $force
+        );
+
+        $this->createRepository(
+            $name,
+            $force
+        );
+
+        $this->newLine();
+
+        $this->info(
+            "✨ Estrutura para {$name} criada com sucesso!"
+        );
+
+        $this->newLine();
+
+        $this->line('Arquivos principais gerados:');
+        $this->line("  • Model: {$name}.php");
+        $this->line("  • Request: Create{$name}Request.php");
+        $this->line("  • Request: Update{$name}Request.php");
+        $this->line("  • DTO: Create{$name}DTO.php");
+        $this->line("  • DTO: Update{$name}DTO.php");
+        $this->line("  • Resource: {$name}Resource.php");
+        $this->line("  • Controller: {$name}Controller.php");
+        $this->line("  • Service: {$name}Service.php");
+        $this->line("  • Repository: {$name}Repository.php");
 
         return self::SUCCESS;
     }
 
     /**
-     * Cria Model e Migration.
+     * Cria Model e Migration utilizando o generator nativo
+     * do Laravel e depois aplica o model.stub da biblioteca.
      */
-    private function createModelAndMigration(string $name, bool $force = false): void
-    {
-        $this->info("Criando Model e Migration para {$name}...");
+    private function createModelAndMigration(
+        string $name,
+        bool $force = false
+    ): void {
+        $this->info(
+            "Criando Model e Migration para {$name}..."
+        );
 
         $params = [
             'name' => $name,
@@ -72,303 +123,535 @@ class CreateDomainStructureCommand extends Command
             $params['--force'] = true;
         }
 
-        Artisan::call('make:model', $params);
+        Artisan::call(
+            'make:model',
+            $params
+        );
+
         $this->outputCommandOutput();
 
-        $this->replaceGeneratedModel($name);
+        $this->replaceGeneratedModel(
+            $name
+        );
     }
 
     /**
-     * Substitui a Model gerada pelo Laravel pelo model.stub.
+     * Substitui a Model criada pelo Laravel pelo model.stub
+     * disponibilizado pela biblioteca.
      */
-    private function replaceGeneratedModel(string $name): void
-    {
-        $modelPath = app_path("Models/{$name}.php");
+    private function replaceGeneratedModel(
+        string $name
+    ): void {
+        $modelPath = app_path(
+            "Models/{$name}.php"
+        );
 
-        $stub = $this->loadStub('model.stub');
+        $stub = $this->loadStub(
+            'model.stub'
+        );
 
-        $content = $this->replaceStubVariables($stub, [
-            'namespace' => 'App\Models',
-            'model' => $name,
-            'table' => $this->getTableName($name),
-            'hashPrefix' => $this->getHashPrefix($name),
-        ]);
+        $content = $this->replaceStubVariables(
+            $stub,
+            [
+                'name' => $name,
+                'model' => $name,
+                'namespace' => 'App\\Models',
+                'table' => $this->getTableName($name),
+                'hashPrefix' => $this->getHashPrefix($name),
+            ]
+        );
 
-        File::put($modelPath, $content);
+        File::put(
+            $modelPath,
+            $content
+        );
+
+        $this->line(
+            "Model {$name}.php configurada com HasHash."
+        );
     }
 
     /**
-     * Retorna o nome da tabela automaticamente.
+     * Retorna automaticamente o nome da tabela.
      *
-     * Patient -> patients
+     * Exemplos:
+     *
+     * Patient       -> patients
+     * Product       -> products
+     * Organization  -> organizations
      * MedicalRecord -> medical_records
      */
-    private function getTableName(string $model): string
-    {
+    private function getTableName(
+        string $model
+    ): string {
         return Str::snake(
             Str::pluralStudly($model)
         );
     }
 
     /**
-     * Gera um prefixo automaticamente.
+     * Gera dinamicamente o prefixo utilizado pelo HasHash.
+     *
+     * Não existem entidades conhecidas ou prefixos fixos
+     * dentro da biblioteca.
+     *
+     * Exemplos:
      *
      * Patient             -> PAT
      * Product             -> PRO
+     * Organization        -> ORG
      * MedicalRecord       -> MRE
      * EmergencyAttendance -> EAT
      * UserSessionToken    -> UST
      */
-    private function getHashPrefix(string $model): string
-    {
+    private function getHashPrefix(
+        string $model
+    ): string {
         $words = preg_split(
             '/(?=[A-Z])/',
-            $model,
+            Str::studly($model),
             -1,
             PREG_SPLIT_NO_EMPTY
         );
 
-        if (count($words) === 1) {
-            return strtoupper(substr($words[0], 0, 3));
+        if (empty($words)) {
+            return strtoupper(
+                substr($model, 0, 3)
+            );
         }
 
+        /**
+         * Model com apenas uma palavra.
+         *
+         * Patient -> PAT
+         * Product -> PRO
+         */
+        if (count($words) === 1) {
+            return strtoupper(
+                substr($words[0], 0, 3)
+            );
+        }
+
+        /**
+         * Model composta.
+         *
+         * Inicialmente utiliza a primeira letra
+         * de cada palavra.
+         */
         $prefix = '';
 
         foreach ($words as $word) {
-            $prefix .= strtoupper($word[0]);
+            $prefix .= strtoupper(
+                substr($word, 0, 1)
+            );
         }
 
+        /**
+         * Se o acrônimo possuir menos de 3 caracteres,
+         * completa utilizando caracteres da primeira
+         * palavra.
+         *
+         * MedicalRecord
+         *
+         * MR
+         * +
+         * E
+         *
+         * = MRE
+         */
         if (strlen($prefix) < 3) {
+            $firstWord = strtoupper(
+                $words[0]
+            );
 
-            $firstWord = strtoupper($words[0]);
-            $i = 1;
+            $index = 1;
 
             while (
                 strlen($prefix) < 3 &&
-                isset($firstWord[$i])
+                isset($firstWord[$index])
             ) {
-                $prefix .= $firstWord[$i];
-                $i++;
+                $prefix .= $firstWord[$index];
+
+                $index++;
             }
         }
 
-        return substr($prefix, 0, 3);
+        return substr(
+            $prefix,
+            0,
+            3
+        );
     }
 
     /**
      * Cria Controller.
      */
-    private function createController(string $name, bool $force = false): void
-    {
+    private function createController(
+        string $name,
+        bool $force = false
+    ): void {
         $domainFolder = $this->getDomainFolder();
 
         $controllerName = "{$name}Controller";
 
-        $path = app_path('Http/Controllers');
+        $path = app_path(
+            'Http/Controllers'
+        );
+
         $fileName = "{$controllerName}.php";
+
         $fullPath = "{$path}/{$fileName}";
 
-        $this->info("Criando Controller {$fileName}...");
+        $this->info(
+            "Criando Controller {$fileName}..."
+        );
 
-        $this->ensureDirectoryExists($path);
+        $this->ensureDirectoryExists(
+            $path
+        );
 
-        if (File::exists($fullPath) && ! $force) {
-            $this->warn("O arquivo {$fileName} já existe. Ignorado.");
+        if (
+            File::exists($fullPath) &&
+            ! $force
+        ) {
+            $this->warn(
+                "O arquivo {$fileName} já existe. Ignorado."
+            );
+
             return;
         }
 
-        $stub = $this->loadStub('controller.stub');
+        $stub = $this->loadStub(
+            'controller.stub'
+        );
 
-        $content = $this->replaceStubVariables($stub, [
-            'name' => $name,
-            'controller' => $controllerName,
-            'domainFolder' => $domainFolder,
-        ]);
+        $content = $this->replaceStubVariables(
+            $stub,
+            [
+                'name' => $name,
+                'controller' => $controllerName,
+                'domainFolder' => $domainFolder,
+            ]
+        );
 
-        File::put($fullPath, $content);
+        File::put(
+            $fullPath,
+            $content
+        );
     }
 
     /**
-     * Cria Request.
+     * Cria os Requests de Create e Update.
+     *
+     * Exemplo:
+     *
+     * CreateUserRequest
+     * UpdateUserRequest
      */
-    private function createRequests(string $name, bool $force = false): void
-    {
-         $requests = [
+    private function createRequests(
+        string $name,
+        bool $force = false
+    ): void {
+        $requests = [
             "Create{$name}Request",
             "Update{$name}Request",
         ];
 
-        foreach ($requests as $request) {
+        foreach ($requests as $requestName) {
+            $this->info(
+                "Criando Request {$requestName}..."
+            );
 
-            $this->info("Criando Request {$request}...");
-
-            $params = ['name' => $request];
+            $params = [
+                'name' => $requestName,
+            ];
 
             if ($force) {
                 $params['--force'] = true;
             }
 
-            Artisan::call('make:request', $params);
+            Artisan::call(
+                'make:request',
+                $params
+            );
 
             $this->outputCommandOutput();
         }
     }
 
     /**
-     * Cria DTO.
+     * Cria os DTOs de Create e Update.
+     *
+     * Exemplo:
+     *
+     * CreateUserDTO
+     * UpdateUserDTO
      */
-    private function createDtos(string $name, bool $force = false): void
-    {
+    private function createDtos(
+        string $name,
+        bool $force = false
+    ): void {
         $domainFolder = $this->getDomainFolder();
 
-        $path = app_path("{$domainFolder}/{$name}/DTO");
+        $path = app_path(
+            "{$domainFolder}/{$name}/DTO"
+        );
 
-        $this->ensureDirectoryExists($path);
+        $this->ensureDirectoryExists(
+            $path
+        );
 
         $dtos = [
-            "Create{$name}DTO" => 'dto-create.stub',
-            "Update{$name}DTO" => 'dto-update.stub',
+            [
+                'class' => "Create{$name}DTO",
+                'stub' => 'dto-create.stub',
+            ],
+            [
+                'class' => "Update{$name}DTO",
+                'stub' => 'dto-update.stub',
+            ],
         ];
 
-        foreach ($dtos as $class => $stubFile) {
+        foreach ($dtos as $dto) {
+            $className = $dto['class'];
+            $stubName = $dto['stub'];
 
-            $file = "{$path}/{$class}.php";
+            $fileName = "{$className}.php";
 
-            $this->info("Criando DTO {$class}...");
+            $fullPath = "{$path}/{$fileName}";
 
-            if (File::exists($file) && ! $force) {
+            $this->info(
+                "Criando DTO {$fileName}..."
+            );
 
-                $this->warn("{$class} já existe.");
+            if (
+                File::exists($fullPath) &&
+                ! $force
+            ) {
+                $this->warn(
+                    "O arquivo {$fileName} já existe. Ignorado."
+                );
 
                 continue;
             }
 
-            $stub = $this->loadStub($stubFile);
+            $stub = $this->loadStub(
+                $stubName
+            );
+
+            $content = $this->replaceStubVariables(
+                $stub,
+                [
+                    'name' => $name,
+                    'dto' => $className,
+                    'domainFolder' => $domainFolder,
+                ]
+            );
 
             File::put(
-                $file,
-                $this->replaceStubVariables($stub, [
-                    'name' => $name,
-                    'dto' => $class,
-                    'domainFolder' => $domainFolder,
-                ])
+                $fullPath,
+                $content
             );
         }
     }
 
     /**
-     * Cria Service.
+     * Cria Resource.
+     *
+     * Exemplo:
+     *
+     * UserResource
      */
-    private function createService(string $name, bool $force = false): void
-    {
-        $domainFolder = $this->getDomainFolder();
-
-        $path = app_path("{$domainFolder}/{$name}/Service");
-
-        $fileName = "{$name}Service.php";
-        $fullPath = "{$path}/{$fileName}";
-
-        $this->info("Criando Service {$fileName}...");
-
-        $this->ensureDirectoryExists($path);
-
-        if (File::exists($fullPath) && ! $force) {
-            $this->warn("O arquivo {$fileName} já existe. Ignorado.");
-            return;
-        }
-
-        $stub = $this->loadStub('service.stub');
-
-        $content = $this->replaceStubVariables($stub, [
-            'name' => $name,
-            'domainFolder' => $domainFolder,
-        ]);
-
-        File::put($fullPath, $content);
-    }
-
-    /**
-     * Cria Repository.
-     */
-    private function createRepository(string $name, bool $force = false): void
-    {
-        $domainFolder = $this->getDomainFolder();
-
-        $path = app_path("{$domainFolder}/{$name}/Repositories");
-
-        $fileName = "{$name}Repository.php";
-        $fullPath = "{$path}/{$fileName}";
-
-        $this->info("Criando Repository {$fileName}...");
-
-        $this->ensureDirectoryExists($path);
-
-        if (File::exists($fullPath) && ! $force) {
-            $this->warn("O arquivo {$fileName} já existe. Ignorado.");
-            return;
-        }
-
-        $stub = $this->loadStub('repository.stub');
-
-        $content = $this->replaceStubVariables($stub, [
-            'name' => $name,
-            'domainFolder' => $domainFolder,
-        ]);
-
-        File::put($fullPath, $content);
-    }
-
-    private function createResource(string $name, bool $force = false): void 
-    {
-
-        $path = app_path('Http/Resources');
+    private function createResource(
+        string $name,
+        bool $force = false
+    ): void {
+        $path = app_path(
+            'Http/Resources'
+        );
 
         $fileName = "{$name}Resource.php";
 
         $fullPath = "{$path}/{$fileName}";
 
-        $this->ensureDirectoryExists($path);
+        $this->info(
+            "Criando Resource {$fileName}..."
+        );
 
-        $this->info("Criando Resource {$fileName}...");
+        $this->ensureDirectoryExists(
+            $path
+        );
 
-        if (File::exists($fullPath) && ! $force) {
-
-            $this->warn("{$fileName} já existe.");
+        if (
+            File::exists($fullPath) &&
+            ! $force
+        ) {
+            $this->warn(
+                "O arquivo {$fileName} já existe. Ignorado."
+            );
 
             return;
         }
 
-        $stub = $this->loadStub('resource.stub');
+        $stub = $this->loadStub(
+            'resource.stub'
+        );
+
+        $content = $this->replaceStubVariables(
+            $stub,
+            [
+                'name' => $name,
+                'resource' => "{$name}Resource",
+            ]
+        );
 
         File::put(
             $fullPath,
-            $this->replaceStubVariables($stub, [
+            $content
+        );
+    }
+
+    /**
+     * Cria Service.
+     */
+    private function createService(
+        string $name,
+        bool $force = false
+    ): void {
+        $domainFolder = $this->getDomainFolder();
+
+        $path = app_path(
+            "{$domainFolder}/{$name}/Service"
+        );
+
+        $fileName = "{$name}Service.php";
+
+        $fullPath = "{$path}/{$fileName}";
+
+        $this->info(
+            "Criando Service {$fileName}..."
+        );
+
+        $this->ensureDirectoryExists(
+            $path
+        );
+
+        if (
+            File::exists($fullPath) &&
+            ! $force
+        ) {
+            $this->warn(
+                "O arquivo {$fileName} já existe. Ignorado."
+            );
+
+            return;
+        }
+
+        $stub = $this->loadStub(
+            'service.stub'
+        );
+
+        $content = $this->replaceStubVariables(
+            $stub,
+            [
                 'name' => $name,
-            ])
+                'domainFolder' => $domainFolder,
+            ]
+        );
+
+        File::put(
+            $fullPath,
+            $content
+        );
+    }
+
+    /**
+     * Cria Repository.
+     */
+    private function createRepository(
+        string $name,
+        bool $force = false
+    ): void {
+        $domainFolder = $this->getDomainFolder();
+
+        $path = app_path(
+            "{$domainFolder}/{$name}/Repositories"
+        );
+
+        $fileName = "{$name}Repository.php";
+
+        $fullPath = "{$path}/{$fileName}";
+
+        $this->info(
+            "Criando Repository {$fileName}..."
+        );
+
+        $this->ensureDirectoryExists(
+            $path
+        );
+
+        if (
+            File::exists($fullPath) &&
+            ! $force
+        ) {
+            $this->warn(
+                "O arquivo {$fileName} já existe. Ignorado."
+            );
+
+            return;
+        }
+
+        $stub = $this->loadStub(
+            'repository.stub'
+        );
+
+        $content = $this->replaceStubVariables(
+            $stub,
+            [
+                'name' => $name,
+                'domainFolder' => $domainFolder,
+            ]
+        );
+
+        File::put(
+            $fullPath,
+            $content
         );
     }
 
     /**
      * Carrega um stub da biblioteca.
      */
-    private function loadStub(string $stub): string
-    {
+    private function loadStub(
+        string $stub
+    ): string {
         $path = $this->getStubsPath() . "/{$stub}";
 
         if (! File::exists($path)) {
-            throw new \RuntimeException("Stub não encontrado: {$path}");
+            throw new \RuntimeException(
+                "Stub não encontrado: {$path}"
+            );
         }
 
-        return File::get($path);
+        return File::get(
+            $path
+        );
     }
 
     /**
-     * Substitui variáveis do stub.
+     * Substitui as variáveis existentes no stub.
+     *
+     * Suporta:
+     *
+     * {{ name }}
+     * {{name}}
+     * $NAME
      */
-    private function replaceStubVariables(string $stub, array $variables): string
-    {
+    private function replaceStubVariables(
+        string $stub,
+        array $variables
+    ): string {
         foreach ($variables as $key => $value) {
-
             $stub = str_replace(
                 [
                     '{{ ' . $key . ' }}',
@@ -386,10 +669,10 @@ class CreateDomainStructureCommand extends Command
     /**
      * Garante que o diretório exista.
      */
-    private function ensureDirectoryExists(string $path): void
-    {
+    private function ensureDirectoryExists(
+        string $path
+    ): void {
         if (! File::isDirectory($path)) {
-
             File::makeDirectory(
                 $path,
                 0755,
@@ -399,14 +682,16 @@ class CreateDomainStructureCommand extends Command
     }
 
     /**
-     * Exibe o output dos comandos Artisan.
+     * Exibe o output do comando Artisan executado.
      */
     private function outputCommandOutput(): void
     {
         $output = Artisan::output();
 
         if (filled($output)) {
-            $this->line(trim($output));
+            $this->line(
+                trim($output)
+            );
         }
     }
 }
