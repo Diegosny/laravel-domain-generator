@@ -4,6 +4,6 @@ namespace App\{{ domainFolder }}\{{ name }}\DTO;
 
 use Domain\DomainGenerator\Abstracts\AbstractDTO;
 
-final class {{ name }}DTO extends AbstractDTO
+final class {{ dto }}DTO extends AbstractDTO
 {
 }
