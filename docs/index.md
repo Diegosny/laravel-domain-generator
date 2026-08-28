@@ -12,7 +12,7 @@ hero:
 
   actions:
     - theme: brand
-      text: Get Started
+      text: Teste
       link: /getting-started
 
     - theme: alt
