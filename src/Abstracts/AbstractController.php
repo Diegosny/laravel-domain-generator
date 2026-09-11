@@ -2,231 +2,853 @@
 
 namespace Domain\DomainGenerator\Abstracts;
 
+use Closure;
+use Domain\DomainGenerator\Interfaces\DTOInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Routing\Controller;
+use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-abstract class AbstractController extends Controller
+abstract class AbstractController extends BaseController
 {
-    protected mixed $service;
+    use AuthorizesRequests;
+    use ValidatesRequests;
 
-    protected ?string $requestValidate = null;
+    public const TYPE_SUCCESS = 'success';
 
-    protected ?string $requestValidateUpdate = null;
+    public const TYPE_ERROR = 'error';
 
-    protected ?string $requestDto = null;
+    private const KEY_TYPE = 'type';
 
-    protected ?string $requestDtoUpdate = null;
+    private const KEY_STATUS = 'status';
 
-    protected ?string $resource = null;
+    private const KEY_DATA = 'data';
 
+    private const KEY_MESSAGE = 'message';
+
+    private const KEY_SHOW = 'show';
+
+    private const KEY_ERRORS = 'errors';
+
+    private const UNAUTHORIZED_MESSAGE =
+        'Você não tem permissão suficiente para executar essa ação';
+
+    /**
+     * Default relationships.
+     */
     protected array $with = [];
 
-    public function index(Request $request): JsonResponse
-    {
+    /**
+     * Service used by Controller.
+     */
+    protected mixed $service;
+
+    /**
+     * Optional API Resource.
+     */
+    protected ?string $resource = null;
+
+    /**
+     * FormRequest used for store.
+     */
+    protected ?string $requestValidate = null;
+
+    /**
+     * FormRequest used for update.
+     */
+    protected ?string $requestValidateUpdate = null;
+
+    /**
+     * DTO used for store.
+     */
+    protected ?string $requestDto = null;
+
+    /**
+     * DTO used for update.
+     *
+     * When null, requestDto is used.
+     */
+    protected ?string $requestDtoUpdate = null;
+
+    /**
+     * Default success message.
+     */
+    protected string $messageSuccessDefault =
+        'Operação realizada com sucesso';
+
+    /**
+     * Default error message.
+     */
+    protected string $messageErrorDefault = 'Ops';
+
+    /*
+    |--------------------------------------------------------------------------
+    | CRUD
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * List resources.
+     */
+    public function index(
+        Request $request
+    ): JsonResponse {
         return $this->handle(
-            fn () => $this->service->getAll(
-                $request->query(),
-                $this->resolveWith($request)
-            )
-        );
-    }
-
-    public function show(Request $request, mixed $id): JsonResponse
-    {
-        return $this->handle(
-            fn () => $this->service->find(
-                $id,
-                $this->resolveWith($request)
-            )
-        );
-    }
-
-    public function store(Request $request): JsonResponse
-    {
-        return $this->handle(function () use ($request) {
-            $data = $this->validatedData($request, false);
-
-            if ($this->requestDto) {
-                return $this->service->saveDto(
-                    $this->requestDto::fromArray($data)
-                );
-            }
-
-            return $this->service->save($data);
-        }, 201);
-    }
-
-    public function update(Request $request, mixed $id): JsonResponse
-    {
-        return $this->handle(function () use ($request, $id) {
-            $data = $this->validatedData($request, true);
-
-            if ($this->requestDtoUpdate) {
-                return $this->service->updateDto(
-                    $id,
-                    $this->requestDtoUpdate::fromArray($data)
-                );
-            }
-
-            return $this->service->update($id, $data);
-        });
-    }
-
-    public function destroy(mixed $id): JsonResponse
-    {
-        return $this->handle(function () use ($id) {
-            $this->service->delete($id);
-
-            return [
-                'message' => 'Registro removido com sucesso.',
-            ];
-        });
-    }
-
-    protected function handle(callable $callback, int $status = 200): JsonResponse
-    {
-        try {
-            return $this->success(
-                $this->applyResource($callback()),
-                $status
-            );
-        } catch (ValidationException $e) {
-            return $this->error($e->errors(), 422);
-        } catch (AuthorizationException $e) {
-            return $this->error($e->getMessage(), 403);
-        } catch (Throwable $e) {
-            return $this->error(
-                app()->hasDebugModeEnabled()
-                    ? $e->getMessage()
-                    : 'Erro interno do servidor.',
-                500
-            );
-        }
-    }
-
-    protected function applyResource(mixed $payload): mixed
-    {
-        if (! $this->resource || $payload === null) {
-            return $payload;
-        }
-
-        if ($payload instanceof JsonResource) {
-            return $payload;
-        }
-
-        $resource = $this->resource;
-
-        if ($payload instanceof LengthAwarePaginator) {
-            return $resource::collection($payload);
-        }
-
-        if ($payload instanceof EloquentCollection || $payload instanceof Collection) {
-            return $resource::collection($payload);
-        }
-
-        if ($payload instanceof Model) {
-            return new $resource($payload);
-        }
-
-        return $payload;
-    }
-
-    protected function resolveWith(Request $request): array
-    {
-        $queryWith = $request->query('with');
-
-        if (! $queryWith) {
-            return $this->with;
-        }
-
-        return array_values(
-            array_unique(
-                array_merge(
-                    $this->with,
-                    array_filter(
-                        array_map(
-                            'trim',
-                            explode(',', $queryWith)
-                        )
+            fn () =>
+                $this->service->getAll(
+                    $request->query(),
+                    $this->resolveWith(
+                        $request
                     )
                 )
-            )
         );
     }
 
-    protected function validatedData(Request $request, bool $update = false): array
+    /**
+     * Store resource.
+     */
+    public function store(
+        Request $request
+    ): JsonResponse {
+        return $this->handle(
+            function () use ($request) {
+                $validated =
+                    $this->validateStoreRequest(
+                        $request
+                    );
+
+                return DB::transaction(
+                    fn () =>
+                        $this->saveToService(
+                            $validated
+                        )
+                );
+            },
+            successMessage:
+                $this->messageSuccessDefault
+        );
+    }
+
+    /**
+     * Update resource.
+     */
+    public function update(
+        Request $request,
+        mixed $id
+    ): JsonResponse {
+        return $this->handle(
+            function () use (
+                $request,
+                $id
+            ) {
+                $validated =
+                    $this->validateUpdateRequest(
+                        $request
+                    );
+
+                return DB::transaction(
+                    fn () =>
+                        $this->updateToService(
+                            $id,
+                            $validated
+                        )
+                );
+            },
+            successMessage:
+                $this->messageSuccessDefault
+        );
+    }
+
+    /**
+     * Show resource.
+     */
+    public function show(
+        mixed $id,
+        Request $request
+    ): JsonResponse {
+        return $this->handle(
+            fn () =>
+                $this->service->find(
+                    $id,
+                    $this->resolveWith(
+                        $request
+                    )
+                )
+        );
+    }
+
+    /**
+     * Delete resource.
+     */
+    public function destroy(
+        mixed $id
+    ): JsonResponse {
+        return $this->handle(
+            function () use ($id) {
+                DB::transaction(
+                    fn () =>
+                        $this->service->delete(
+                            $id
+                        )
+                );
+
+                return [];
+            },
+            successMessage:
+                $this->messageSuccessDefault
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Extra endpoints
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Return prerequisites.
+     */
+    public function preRequisite(
+        mixed $id = null
+    ): JsonResponse {
+        return $this->handle(
+            fn () => [
+                'preRequisite' =>
+                    $this->service
+                        ->preRequisite($id),
+            ]
+        );
+    }
+
+    /**
+     * Return select options.
+     */
+    public function toSelect(): JsonResponse
     {
-        $requestClass = $update
-            ? $this->requestValidateUpdate
-            : $this->requestValidate;
+        return $this->handle(
+            fn () =>
+                $this->service->toSelect()
+        );
+    }
 
-        if (! $requestClass) {
-            return $request->all();
-        }
+    /*
+    |--------------------------------------------------------------------------
+    | Execution
+    |--------------------------------------------------------------------------
+    */
 
-        $formRequest = app($requestClass);
+    /**
+     * Execute Controller action and normalize exceptions.
+     */
+    protected function handle(
+        Closure $callback,
+        ?string $successMessage = null
+    ): JsonResponse {
+        try {
+            $result = $callback();
 
-        $formRequest->setContainer(app())
-            ->setRedirector(app('redirect'))
-            ->initialize(
-                $request->query->all(),
-                $request->request->all(),
-                [],
-                $request->cookies->all(),
-                $request->files->all(),
-                $request->server->all(),
-                $request->getContent()
+            return $successMessage !== null
+                ? $this->success(
+                    $successMessage,
+                    $result
+                )
+                : $this->ok($result);
+        } catch (
+            ValidationException $exception
+        ) {
+            return $this->error(
+                $this->messageErrorDefault,
+                $exception->errors(),
+                Response::HTTP_UNPROCESSABLE_ENTITY
             );
+        } catch (
+            AuthorizationException $exception
+        ) {
+            return $this->error(
+                $exception->getMessage(),
+                [],
+                Response::HTTP_FORBIDDEN
+            );
+        } catch (
+            ModelNotFoundException $exception
+        ) {
+            return $this->error(
+                'Registro não encontrado',
+                [],
+                Response::HTTP_NOT_FOUND
+            );
+        } catch (Throwable $exception) {
+            report($exception);
 
-        $formRequest->validateResolved();
-
-        return $formRequest->validated();
+            return $this->error(
+                $exception->getMessage(),
+                [],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
-    protected function hasPermissionTo(string $permission): void
-    {
-        $user = Auth::user();
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
-        if (! $user || ! method_exists($user, 'hasPermissionTo')) {
-            throw new AuthorizationException('Usuário não autenticado.');
+    /**
+     * Resolve relationships from query string.
+     *
+     * Supports:
+     *
+     * ?with=roles,permissions
+     *
+     * ?with[]=roles&with[]=permissions
+     */
+    protected function resolveWith(
+        Request $request
+    ): array|string|null {
+        return $request->query(
+            'with',
+            $this->with
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validation / DTO
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Validate store request and optionally
+     * convert data into DTO.
+     */
+    protected function validateStoreRequest(
+        Request $request
+    ): array|DTOInterface {
+        if (
+            $this->requestValidate === null
+        ) {
+            return $this->makeDto(
+                $request->all(),
+                $this->requestDto
+            );
         }
 
-        if (! $user->hasPermissionTo($permission)) {
-            throw new AuthorizationException('Você não possui permissão para executar esta ação.');
+        $validated = app(
+            $this->requestValidate
+        )->validated();
+
+        return $this->makeDto(
+            $validated,
+            $this->requestDto
+        );
+    }
+
+    /**
+     * Validate update request and optionally
+     * convert data into DTO.
+     */
+    protected function validateUpdateRequest(
+        Request $request
+    ): array|DTOInterface {
+        if (
+            $this->requestValidateUpdate
+                !== null
+        ) {
+            $validated = app(
+                $this->requestValidateUpdate
+            )->validated();
+        } elseif (
+            $this->requestValidate
+                !== null
+        ) {
+            $validated = app(
+                $this->requestValidate
+            )->validated();
+        } else {
+            $validated = $request->all();
+        }
+
+        return $this->makeDto(
+            $validated,
+            $this->requestDtoUpdate ??
+                $this->requestDto
+        );
+    }
+
+    /**
+     * Convert array into configured DTO.
+     */
+    protected function makeDto(
+        array $data,
+        ?string $dtoClass
+    ): array|DTOInterface {
+        if ($dtoClass === null) {
+            return $data;
+        }
+
+        if (! class_exists($dtoClass)) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'DTO class [%s] does not exist.',
+                    $dtoClass
+                )
+            );
+        }
+
+        if (
+            ! is_a(
+                $dtoClass,
+                DTOInterface::class,
+                true
+            )
+        ) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'DTO [%s] must implement [%s].',
+                    $dtoClass,
+                    DTOInterface::class
+                )
+            );
+        }
+
+        return $dtoClass::fromArray(
+            $data
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Service delegation
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Save through Service.
+     */
+    protected function saveToService(
+        array|DTOInterface $data
+    ): mixed {
+        if (
+            $data
+                instanceof DTOInterface
+        ) {
+            if (
+                ! method_exists(
+                    $this->service,
+                    'saveDto'
+                )
+            ) {
+                throw new InvalidArgumentException(
+                    sprintf(
+                        'Service [%s] does not support DTOs. ' .
+                        'Implement saveDto() in the service.',
+                        get_class(
+                            $this->service
+                        )
+                    )
+                );
+            }
+
+            return $this
+                ->service
+                ->saveDto($data);
+        }
+
+        return $this
+            ->service
+            ->save($data);
+    }
+
+    /**
+     * Update through Service.
+     */
+    protected function updateToService(
+        mixed $id,
+        array|DTOInterface $data
+    ): mixed {
+        if (
+            $data
+                instanceof DTOInterface
+        ) {
+            if (
+                ! method_exists(
+                    $this->service,
+                    'updateDto'
+                )
+            ) {
+                throw new InvalidArgumentException(
+                    sprintf(
+                        'Service [%s] does not support DTOs. ' .
+                        'Implement updateDto() in the service.',
+                        get_class(
+                            $this->service
+                        )
+                    )
+                );
+            }
+
+            return $this
+                ->service
+                ->updateDto(
+                    $id,
+                    $data
+                );
+        }
+
+        return $this
+            ->service
+            ->update(
+                $id,
+                $data
+            );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Responses
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Successful response without message.
+     */
+    public function ok(
+        mixed $items = [],
+        int $status = Response::HTTP_OK
+    ): JsonResponse {
+        $payload = [
+            self::KEY_TYPE =>
+                self::TYPE_SUCCESS,
+
+            self::KEY_STATUS =>
+                $status,
+
+            self::KEY_SHOW =>
+                false,
+        ];
+
+        return $this->jsonResponse(
+            array_merge(
+                $payload,
+                $this->toArrayPayload(
+                    $items
+                )
+            ),
+            $status
+        );
+    }
+
+    /**
+     * Error response.
+     */
+    public function error(
+        string $message = '',
+        array $items = [],
+        int $status =
+            Response::HTTP_UNPROCESSABLE_ENTITY
+    ): JsonResponse {
+        $payload = [
+            self::KEY_TYPE =>
+                self::TYPE_ERROR,
+
+            self::KEY_STATUS =>
+                $status,
+
+            self::KEY_MESSAGE =>
+                $this->resolveMessage(
+                    $message,
+                    $this
+                        ->messageErrorDefault
+                ),
+
+            self::KEY_SHOW =>
+                true,
+        ];
+
+        if (! empty($items)) {
+            $payload[
+                self::KEY_ERRORS
+            ] = $items;
+        }
+
+        return $this->jsonResponse(
+            $payload,
+            $status
+        );
+    }
+
+    /**
+     * Successful response with message.
+     */
+    public function success(
+        string $message = '',
+        mixed $items = [],
+        int $status =
+            Response::HTTP_OK
+    ): JsonResponse {
+        $payload = [
+            self::KEY_TYPE =>
+                self::TYPE_SUCCESS,
+
+            self::KEY_STATUS =>
+                $status,
+
+            self::KEY_MESSAGE =>
+                $this->resolveMessage(
+                    $message,
+                    $this
+                        ->messageSuccessDefault
+                ),
+
+            self::KEY_SHOW =>
+                true,
+        ];
+
+        return $this->jsonResponse(
+            array_merge(
+                $payload,
+                $this->toArrayPayload(
+                    $items
+                )
+            ),
+            $status
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication / Permissions
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Return authenticated user.
+     */
+    public function getUserAuth(): mixed
+    {
+        return Auth::user();
+    }
+
+    /**
+     * Verify permission.
+     */
+    public function hasPermissionTo(
+        string $permission
+    ): void {
+        $user = $this->getUserAuth();
+
+        if (
+            ! $user ||
+            ! method_exists(
+                $user,
+                'hasPermissionTo'
+            ) ||
+            ! $user->hasPermissionTo(
+                $permission
+            )
+        ) {
+            throw new AuthorizationException(
+                self::UNAUTHORIZED_MESSAGE
+            );
         }
     }
 
-    protected function success(mixed $data = null, int $status = 200): JsonResponse
-    {
-        return response()->json([
-            'type' => 'success',
-            'status' => $status,
-            'data' => $data,
-        ], $status);
+    /*
+    |--------------------------------------------------------------------------
+    | Internal response helpers
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Create JSON response.
+     */
+    protected function jsonResponse(
+        array $payload,
+        int $status
+    ): JsonResponse {
+        return response()->json(
+            $payload,
+            $status
+        );
     }
 
-    protected function error(mixed $message, int $status = 500): JsonResponse
-    {
-        return response()->json([
-            'type' => 'error',
-            'status' => $status,
-            'message' => $message,
-            'show' => app()->hasDebugModeEnabled(),
-        ], $status);
+    /**
+     * Resolve response message.
+     */
+    protected function resolveMessage(
+        string $message,
+        string $defaultMessage
+    ): string {
+        return filled($message)
+            ? $message
+            : $defaultMessage;
     }
 
-    protected function ok(mixed $data = null): JsonResponse
+    /**
+     * Convert payload to API response.
+     */
+    protected function toArrayPayload(
+        mixed $payload
+    ): array {
+        if (
+            $payload === null ||
+            $payload === [] ||
+            $payload === ''
+        ) {
+            return [];
+        }
+
+        /*
+         * Resource + paginator.
+         */
+        if (
+            $this->hasResource() &&
+            $payload
+                instanceof LengthAwarePaginator
+        ) {
+            $resourceClass =
+                $this->resource;
+
+            return $resourceClass::collection(
+                $payload
+            )
+                ->response()
+                ->getData(true);
+        }
+
+        /*
+         * Resource + Collection.
+         */
+        if (
+            $this->hasResource() &&
+            $payload instanceof Collection
+        ) {
+            $resourceClass =
+                $this->resource;
+
+            return [
+                self::KEY_DATA =>
+                    $resourceClass::collection(
+                        $payload
+                    )->resolve(),
+            ];
+        }
+
+        /*
+         * Resource + Model.
+         */
+        if (
+            $this->hasResource() &&
+            $payload instanceof Model
+        ) {
+            $resourceClass =
+                $this->resource;
+
+            return [
+                self::KEY_DATA =>
+                    (new $resourceClass(
+                        $payload
+                    ))->resolve(),
+            ];
+        }
+
+        /*
+         * Native paginator without Resource.
+         */
+        if (
+            $payload
+                instanceof LengthAwarePaginator
+        ) {
+            return $payload->toArray();
+        }
+
+        /*
+         * Already formatted pagination.
+         */
+        if (
+            is_array($payload) &&
+            isset(
+                $payload[
+                    self::KEY_DATA
+                ]
+            ) &&
+            (
+                isset(
+                    $payload[
+                        'current_page'
+                    ]
+                ) ||
+                isset(
+                    $payload[
+                        'total'
+                    ]
+                )
+            )
+        ) {
+            return $payload;
+        }
+
+        /*
+         * Arrayable objects.
+         */
+        if (
+            $payload
+                instanceof Arrayable
+        ) {
+            return [
+                self::KEY_DATA =>
+                    $payload->toArray(),
+            ];
+        }
+
+        /*
+         * Already formatted data.
+         */
+        if (
+            is_array($payload) &&
+            array_key_exists(
+                self::KEY_DATA,
+                $payload
+            )
+        ) {
+            return $payload;
+        }
+
+        /*
+         * Default.
+         */
+        return [
+            self::KEY_DATA =>
+                is_array($payload)
+                    ? $payload
+                    : $payload,
+        ];
+    }
+
+    /**
+     * Determine whether Controller has
+     * a valid Resource configured.
+     */
+    protected function hasResource(): bool
     {
-        return $this->success($data);
+        return
+            $this->resource !== null &&
+            class_exists(
+                $this->resource
+            );
     }
 }

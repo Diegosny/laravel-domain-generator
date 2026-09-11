@@ -3,11 +3,9 @@
 namespace Domain\DomainGenerator\Abstracts;
 
 use Domain\DomainGenerator\Interfaces\DTOInterface;
-use Domain\DomainGenerator\Interfaces\ServiceInterface;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 
-abstract class AbstractService implements ServiceInterface
+abstract class AbstractService
 {
     /**
      * Default relationships.
@@ -15,89 +13,83 @@ abstract class AbstractService implements ServiceInterface
     protected array $with = [];
 
     /**
-     * Repository used by the service.
+     * Repository used by the Service.
      */
     protected mixed $repository;
 
+    /*
+    |--------------------------------------------------------------------------
+    | Read
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get all records.
+     * Return paginated records.
      */
     public function getAll(
         array $params = [],
-        array|string $with = []
+        array|string|null $with = []
     ): mixed {
         return $this->repository->all(
             $params,
-            $with
+            $this->resolveWith($with)
         );
     }
 
     /**
-     * Find a record.
+     * Find by internal ID or public hash.
      */
     public function find(
         mixed $id,
-        array|string $with = []
+        array|string|null $with = []
     ): mixed {
-        $result = $this->repository->find(
+        return $this->repository->find(
             $id,
-            $with
+            $this->resolveWith($with)
         );
-
-        if ($result === null) {
-            throw new ModelNotFoundException(
-                'Objeto não encontrado na base de dados'
-            );
-        }
-
-        return $result;
     }
 
-    // ---------------------------------------------------------
-    // Store
-    // ---------------------------------------------------------
+    /*
+    |--------------------------------------------------------------------------
+    | Save
+    |--------------------------------------------------------------------------
+    */
 
     /**
-     * Hook executed before saving.
-     *
-     * Kept as array for backwards compatibility.
+     * Hook executed before save.
      */
-    public function beforeSave(
+    protected function beforeSave(
         array $data
     ): array {
         return $data;
     }
 
     /**
-     * Save entity using array data.
-     *
-     * This method is intentionally kept compatible
-     * with previous versions of the library.
+     * Save data using the complete lifecycle.
      */
     public function save(
         array $data
     ): mixed {
-        $data = $this->beforeSave($data);
+        $data = $this->beforeSave(
+            $data
+        );
 
         if (! $this->validateOnInsert($data)) {
             return [];
         }
 
-        $entity = $this->repository->create($data);
-
-        $this->afterSave(
-            $entity,
+        $entity = $this->repository->create(
             $data
         );
 
-        return $entity;
+        return $this->afterSave(
+            $entity,
+            $data
+        );
     }
 
     /**
-     * Save entity using a DTO.
-     *
-     * DTO is converted to an array before reaching
-     * the original save() flow.
+     * Save a DTO.
      */
     public function saveDto(
         DTOInterface $dto
@@ -108,23 +100,25 @@ abstract class AbstractService implements ServiceInterface
     }
 
     /**
-     * Hook executed after saving.
+     * Hook executed after save.
      */
-    public function afterSave(
+    protected function afterSave(
         mixed $entity,
-        array $params
+        array $data
     ): mixed {
         return $entity;
     }
 
-    // ---------------------------------------------------------
-    // Update
-    // ---------------------------------------------------------
+    /*
+    |--------------------------------------------------------------------------
+    | Update
+    |--------------------------------------------------------------------------
+    */
 
     /**
-     * Hook executed before updating.
+     * Hook executed before update.
      */
-    public function beforeUpdate(
+    protected function beforeUpdate(
         mixed $id,
         array $data
     ): array {
@@ -132,7 +126,7 @@ abstract class AbstractService implements ServiceInterface
     }
 
     /**
-     * Update entity using array data.
+     * Update entity.
      */
     public function update(
         mixed $id,
@@ -143,35 +137,36 @@ abstract class AbstractService implements ServiceInterface
             $data
         );
 
-        if (! $this->validateOnUpdate(
-            $id,
-            $data
-        )) {
+        if (
+            ! $this->validateOnUpdate(
+                $id,
+                $data
+            )
+        ) {
             return false;
         }
 
-        $entity = $this->find($id);
+        $entity = $this->repository->find(
+            $id
+        );
 
-        $updated = $this->repository->update(
+        if ($entity === null) {
+            return false;
+        }
+
+        $entity = $this->repository->update(
             $entity,
             $data
         );
 
-        if ($updated) {
-            $this->afterUpdate(
-                $entity,
-                $data
-            );
-        }
-
-        return $updated;
+        return $this->afterUpdate(
+            $entity,
+            $data
+        );
     }
 
     /**
-     * Update entity using a DTO.
-     *
-     * DTO is converted to an array before reaching
-     * the original update() flow.
+     * Update using DTO.
      */
     public function updateDto(
         mixed $id,
@@ -184,23 +179,25 @@ abstract class AbstractService implements ServiceInterface
     }
 
     /**
-     * Hook executed after updating.
+     * Hook executed after update.
      */
-    public function afterUpdate(
+    protected function afterUpdate(
         mixed $entity,
-        array $params
+        array $data
     ): mixed {
         return $entity;
     }
 
-    // ---------------------------------------------------------
-    // Delete
-    // ---------------------------------------------------------
+    /*
+    |--------------------------------------------------------------------------
+    | Delete
+    |--------------------------------------------------------------------------
+    */
 
     /**
-     * Hook executed before deleting.
+     * Hook executed before delete.
      */
-    public function beforeDelete(
+    protected function beforeDelete(
         mixed $id
     ): mixed {
         return $id;
@@ -212,91 +209,77 @@ abstract class AbstractService implements ServiceInterface
     public function delete(
         mixed $id
     ): mixed {
-        $this->validateOnDelete($id);
+        if (! $this->validateOnDelete($id)) {
+            return false;
+        }
 
-        $this->beforeDelete($id);
+        $id = $this->beforeDelete(
+            $id
+        );
 
-        $this->repository->delete($id);
+        $this->repository->delete(
+            $id
+        );
 
-        $this->afterDelete($id);
-
-        return $id;
+        return $this->afterDelete(
+            $id
+        );
     }
 
     /**
-     * Hook executed after deleting.
+     * Hook executed after delete.
      */
-    public function afterDelete(
+    protected function afterDelete(
         mixed $id
     ): mixed {
         return $id;
     }
 
-    // ---------------------------------------------------------
-    // Validation
-    // ---------------------------------------------------------
+    /*
+    |--------------------------------------------------------------------------
+    | Validation hooks
+    |--------------------------------------------------------------------------
+    */
 
     /**
-     * Validate before insert.
+     * Validate insert operation.
      */
-    public function validateOnInsert(
-        array $params
+    protected function validateOnInsert(
+        array $data
     ): bool {
         return true;
     }
 
     /**
-     * Validate before update.
+     * Validate update operation.
      */
-    public function validateOnUpdate(
+    protected function validateOnUpdate(
         mixed $id,
-        array $params
+        array $data
     ): bool {
         return true;
     }
 
     /**
-     * Validate before delete.
+     * Validate delete operation.
      */
-    public function validateOnDelete(
+    protected function validateOnDelete(
         mixed $id
     ): bool {
-        $this->find($id);
-
         return true;
     }
 
-    // ---------------------------------------------------------
-    // Helpers
-    // ---------------------------------------------------------
+    /*
+    |--------------------------------------------------------------------------
+    | Direct Create
+    |--------------------------------------------------------------------------
+    */
 
     /**
-     * Get repository.
-     */
-    public function getRepository(): object
-    {
-        return $this->repository;
-    }
-
-    /**
-     * Get authenticated user.
-     */
-    public function getUserAuth(): mixed
-    {
-        return Auth::user();
-    }
-
-    /**
-     * Return prerequisites.
-     */
-    public function preRequisite(
-        mixed $id = null
-    ): array {
-        return [];
-    }
-
-    /**
-     * Create entity directly.
+     * Create directly through the Repository.
+     *
+     * Unlike save(), this method does not execute
+     * beforeSave() or validateOnInsert().
      */
     public function create(
         array $data
@@ -305,16 +288,14 @@ abstract class AbstractService implements ServiceInterface
             $data
         );
 
-        $this->afterSave(
+        return $this->afterSave(
             $entity,
             $data
         );
-
-        return $entity;
     }
 
     /**
-     * Create entity using DTO.
+     * Create directly using DTO.
      */
     public function createDto(
         DTOInterface $dto
@@ -324,21 +305,33 @@ abstract class AbstractService implements ServiceInterface
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Find Where
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Find one entity by conditions.
+     * Return first record matching conditions.
      */
     public function findOneWhere(
         array $where,
-        array|string $with = []
+        array|string|null $with = []
     ): ?object {
         return $this->repository->findOneWhere(
             $where,
-            $with
+            $this->resolveWith($with)
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Update Or Create
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Update or create entity.
+     * Update or create.
      */
     public function updateOrCreate(
         array $paramsValidation,
@@ -351,7 +344,7 @@ abstract class AbstractService implements ServiceInterface
     }
 
     /**
-     * Update or create entity using DTOs.
+     * Update or create using DTOs.
      */
     public function updateOrCreateDto(
         DTOInterface $paramsValidation,
@@ -363,18 +356,127 @@ abstract class AbstractService implements ServiceInterface
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Prerequisites
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Return select options.
+     * Additional data required by forms/screens.
+     */
+    public function preRequisite(
+        mixed $id = null
+    ): array {
+        return [];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Select
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Return records formatted for select components.
      */
     public function toSelect(
         bool $withGenerateSelectOption = true
     ): mixed {
         $items = $this->repository->list();
 
-        if ($withGenerateSelectOption) {
-            return generateSelectOption($items);
+        if (! $withGenerateSelectOption) {
+            return $items;
         }
 
-        return $items;
+        return $this->generateSelectOption(
+            $items
+        );
+    }
+
+    /**
+     * Convert associative list into value/label format.
+     *
+     * Input:
+     *
+     * [
+     *     1 => 'Product A',
+     *     2 => 'Product B',
+     * ]
+     *
+     * Output:
+     *
+     * [
+     *     [
+     *         'value' => 1,
+     *         'label' => 'Product A',
+     *     ],
+     * ]
+     */
+    protected function generateSelectOption(
+        array $items
+    ): array {
+        $options = [];
+
+        foreach ($items as $value => $label) {
+            $options[] = [
+                'value' => $value,
+                'label' => $label,
+            ];
+        }
+
+        return $options;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Use relationships received by the caller or,
+     * when absent, use Service defaults.
+     */
+    protected function resolveWith(
+        array|string|null $with
+    ): array|string {
+        if (
+            $with === null ||
+            $with === '' ||
+            $with === []
+        ) {
+            return $this->with;
+        }
+
+        return $with;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Repository
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Return repository.
+     */
+    public function getRepository(): object
+    {
+        return $this->repository;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Return authenticated user.
+     */
+    public function getUserAuth(): mixed
+    {
+        return Auth::user();
     }
 }

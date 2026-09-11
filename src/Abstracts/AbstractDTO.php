@@ -3,17 +3,16 @@
 namespace Domain\DomainGenerator\Abstracts;
 
 use Domain\DomainGenerator\Interfaces\DTOInterface;
+use Illuminate\Contracts\Support\Arrayable;
 use InvalidArgumentException;
+use JsonSerializable;
 use ReflectionClass;
-use ReflectionNamedType;
 use ReflectionParameter;
 
-abstract class AbstractDTO implements DTOInterface
+abstract class AbstractDTO implements DTOInterface, Arrayable, JsonSerializable
 {
     /**
-     * Create a DTO from an array.
-     *
-     * The array keys must match the constructor parameter names.
+     * Create DTO from an associative array.
      */
     public static function fromArray(array $data): static
     {
@@ -22,7 +21,7 @@ abstract class AbstractDTO implements DTOInterface
         $constructor = $reflection->getConstructor();
 
         if ($constructor === null) {
-            return new static;
+            return $reflection->newInstance();
         }
 
         $arguments = [];
@@ -34,11 +33,13 @@ abstract class AbstractDTO implements DTOInterface
             );
         }
 
-        return $reflection->newInstanceArgs($arguments);
+        return $reflection->newInstanceArgs(
+            $arguments
+        );
     }
 
     /**
-     * Resolve a constructor parameter from the given data.
+     * Resolve a constructor parameter from input data.
      */
     protected static function resolveParameter(
         ReflectionParameter $parameter,
@@ -46,44 +47,21 @@ abstract class AbstractDTO implements DTOInterface
     ): mixed {
         $name = $parameter->getName();
 
-        /*
-         * The field was provided.
-         */
         if (array_key_exists($name, $data)) {
-            $value = $data[$name];
-            $type = $parameter->getType();
-
-            if (
-                $type instanceof ReflectionNamedType &&
-                enum_exists($type->getName()) &&
-                is_subclass_of($type->getName(), \BackedEnum::class)
-            ) {
-                return $type->getName()::from($value);
-            }
-
-            return $value;
+            return $data[$name];
         }
 
-        /*
-         * The parameter has a default value.
-         */
         if ($parameter->isDefaultValueAvailable()) {
             return $parameter->getDefaultValue();
         }
 
-        /*
-         * The parameter allows null.
-         */
         if ($parameter->allowsNull()) {
             return null;
         }
 
-        /*
-         * The field is required but was not provided.
-         */
         throw new InvalidArgumentException(
             sprintf(
-                'Required field [%s] was not provided for DTO [%s].',
+                'Missing required property [%s] for DTO [%s].',
                 $name,
                 static::class
             )
@@ -99,7 +77,7 @@ abstract class AbstractDTO implements DTOInterface
     }
 
     /**
-     * Convert DTO to JSON serializable array.
+     * JSON serialization.
      */
     public function jsonSerialize(): array
     {

@@ -7,20 +7,23 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Facades\Schema;
-use InvalidArgumentException;
 
 abstract class AbstractRepository
 {
+    /**
+     * Public identifier column.
+     */
+    protected string $idField = 'hash';
+
     /**
      * Model managed by the repository.
      */
     protected Model $model;
 
     /**
-     * Parameters that must never be interpreted as model filters.
+     * Parameters that must not be interpreted as database filters.
      */
-    protected array $reservedParameters = [
+    protected array $reservedFilters = [
         'page',
         'per_page',
         'with',
@@ -28,16 +31,6 @@ abstract class AbstractRepository
         'order',
         'search',
     ];
-
-    /**
-     * Default number of records per page.
-     */
-    protected int $perPage = 15;
-
-    /**
-     * Maximum number of records allowed per page.
-     */
-    protected int $maxPerPage = 100;
 
     public function __construct(Model $model)
     {
@@ -51,11 +44,21 @@ abstract class AbstractRepository
     */
 
     /**
-     * Create a new query for the repository model.
+     * Create a fresh query.
+     */
+    protected function newQuery(): Builder
+    {
+        return $this->model->newQuery();
+    }
+
+    /**
+     * Public query accessor.
+     *
+     * Useful when a child Repository needs custom queries.
      */
     public function query(): Builder
     {
-        return $this->model->newQuery();
+        return $this->newQuery();
     }
 
     /*
@@ -65,153 +68,104 @@ abstract class AbstractRepository
     */
 
     /**
-     * Return a paginated list of records.
-     *
-     * Supports:
-     *
-     * ?name=John
-     * ?with=roles,permissions
-     * ?with[]=roles&with[]=permissions
-     * ?page=2
-     * ?per_page=20
-     * ?sort=name
-     * ?order=asc
+     * Return paginated records.
      */
-    public function getAll(
+    public function all(
         array $filters = [],
-        array|string|null $with = []
+        array|string|null $with = [],
+        int $perPage = 10
     ): LengthAwarePaginator {
-        $query = $this->query();
+        $query = $this->newQuery();
 
         $this->applyWith(
             $query,
             $with
         );
 
-        $this->applyFilters(
+        $query->where(
+            $this->cleanFilters($filters)
+        );
+
+        $this->applySort(
             $query,
             $filters
         );
 
-        $this->applySorting(
-            $query,
-            $filters
-        );
-
-        return $query->paginate(
-            $this->resolvePerPage($filters)
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Find
-    |--------------------------------------------------------------------------
-    */
-
-    /**
-     * Find a record by internal ID or public hash.
-     */
-    public function find(
-        mixed $identifier,
-        array|string|null $with = []
-    ): ?Model {
-        $query = $this->query();
-
-        $this->applyWith(
-            $query,
-            $with
-        );
-
-        return $this
-            ->applyIdentifier(
-                $query,
-                $identifier
-            )
-            ->first();
-    }
-
-    /**
-     * Find a record by internal ID or public hash.
-     *
-     * Throws ModelNotFoundException when not found.
-     */
-    public function findOrFail(
-        mixed $identifier,
-        array|string|null $with = []
-    ): Model {
-        $query = $this->query();
-
-        $this->applyWith(
-            $query,
-            $with
-        );
-
-        return $this
-            ->applyIdentifier(
-                $query,
-                $identifier
-            )
-            ->firstOrFail();
-    }
-
-    /**
-     * Find the first record matching a field/value pair.
-     */
-    public function findOneWhere(
-        string $field,
-        mixed $value,
-        array|string|null $with = []
-    ): ?Model {
-        $query = $this->query();
-
-        $this->applyWith(
-            $query,
-            $with
+        $perPage = $this->resolvePerPage(
+            $filters,
+            $perPage
         );
 
         return $query
-            ->where($field, $value)
-            ->first();
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Where
-    |--------------------------------------------------------------------------
-    */
+    /**
+     * Return all records without pagination.
+     */
+    public function allWithoutPaginate(
+        array $filters = [],
+        array|string|null $with = []
+    ): Collection {
+        $query = $this->newQuery();
+
+        $this->applyWith(
+            $query,
+            $with
+        );
+
+        $query->where(
+            $this->cleanFilters($filters)
+        );
+
+        $this->applySort(
+            $query,
+            $filters
+        );
+
+        return $query->get();
+    }
 
     /**
-     * Start a query using a where clause.
+     * Return a simple associative list.
+     *
+     * Example:
+     *
+     * [
+     *     1 => 'Product A',
+     *     2 => 'Product B',
+     * ]
      */
-    public function where(
-        string $field,
-        mixed $operator = null,
-        mixed $value = null
-    ): Builder {
-        $query = $this->query();
+    public function list(
+        string $pluckValue = 'name',
+        string $pluckKey = 'id',
+        string $sortBy = 'name'
+    ): array {
+        return $this
+            ->newQuery()
+            ->orderBy($sortBy)
+            ->pluck(
+                $pluckValue,
+                $pluckKey
+            )
+            ->all();
+    }
 
-        /**
-         * Allows:
-         *
-         * where('active', true)
-         *
-         * and:
-         *
-         * where('age', '>=', 18)
-         */
-        if (func_num_args() === 2) {
-            return $query->where(
-                $field,
-                $operator
-            );
-        }
-
-        return $query->where(
-            $field,
-            $operator,
-            $value
-        );
+    /**
+     * Generic pluck helper.
+     */
+    public function pluck(
+        string $column,
+        ?string $key = null
+    ): array {
+        return $this
+            ->newQuery()
+            ->pluck(
+                $column,
+                $key
+            )
+            ->all();
     }
 
     /*
@@ -221,13 +175,68 @@ abstract class AbstractRepository
     */
 
     /**
-     * Create a new record.
+     * Create a record.
      */
     public function create(array $data): Model
     {
-        return $this->query()->create(
-            $data
+        return $this
+            ->newQuery()
+            ->create($data);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Find
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Find by internal ID or public hash.
+     *
+     * Examples:
+     *
+     * find(10)
+     * find('PAT_8F3K2Q9X')
+     */
+    public function find(
+        int|string $id,
+        array|string|null $with = []
+    ): ?Model {
+        $query = $this->newQuery();
+
+        $this->applyWith(
+            $query,
+            $with
         );
+
+        return $query
+            ->where(
+                $this->resolveIdentifierField($id),
+                $id
+            )
+            ->first();
+    }
+
+    /**
+     * Find or fail using internal ID or public hash.
+     */
+    public function findOrFail(
+        int|string $id,
+        array|string|null $with = []
+    ): Model {
+        $query = $this->newQuery();
+
+        $this->applyWith(
+            $query,
+            $with
+        );
+
+        return $query
+            ->where(
+                $this->resolveIdentifierField($id),
+                $id
+            )
+            ->firstOrFail();
     }
 
     /*
@@ -237,21 +246,32 @@ abstract class AbstractRepository
     */
 
     /**
-     * Update a record using internal ID or public hash.
+     * Update an existing Model instance.
      */
     public function update(
-        mixed $identifier,
+        Model $entity,
         array $data
     ): Model {
-        $model = $this->findOrFail(
-            $identifier
-        );
+        $entity->fill($data);
 
-        $model->fill($data);
+        $entity->save();
 
-        $model->save();
+        return $entity->refresh();
+    }
 
-        return $model->refresh();
+    /**
+     * Update or create a record.
+     */
+    public function updateOrCreate(
+        array $attributes,
+        array $values = []
+    ): Model {
+        return $this
+            ->newQuery()
+            ->updateOrCreate(
+                $attributes,
+                $values
+            );
     }
 
     /*
@@ -261,247 +281,70 @@ abstract class AbstractRepository
     */
 
     /**
-     * Delete a record using internal ID or public hash.
+     * Delete by internal ID or public hash.
      */
     public function delete(
-        mixed $identifier
+        int|string $id
     ): bool {
-        $model = $this->findOrFail(
-            $identifier
-        );
+        $entity = $this->findOrFail($id);
 
-        return (bool) $model->delete();
+        return (bool) $entity->delete();
     }
 
     /**
-     * Delete records matching a field/value pair.
+     * Delete records matching conditions.
      */
     public function deleteWhere(
-        string $field,
-        mixed $value
+        array $conditions
     ): int {
         return $this
-            ->query()
-            ->where($field, $value)
+            ->newQuery()
+            ->where($conditions)
             ->delete();
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Update Or Create
+    | Where
     |--------------------------------------------------------------------------
     */
 
     /**
-     * Update an existing record or create a new one.
+     * Return records matching conditions.
      */
-    public function updateOrCreate(
-        array $attributes,
-        array $values = []
-    ): Model {
-        return $this
-            ->query()
-            ->updateOrCreate(
-                $attributes,
-                $values
-            );
-    }
+    public function where(
+        array $conditions,
+        array|string|null $with = []
+    ): Collection {
+        $query = $this->newQuery();
 
-    /*
-    |--------------------------------------------------------------------------
-    | Pluck
-    |--------------------------------------------------------------------------
-    */
-
-    /**
-     * Retrieve a list of values.
-     */
-    public function pluck(
-        string $column,
-        ?string $key = null
-    ): \Illuminate\Support\Collection {
-        return $this
-            ->query()
-            ->pluck(
-                $column,
-                $key
-            );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Relationships
-    |--------------------------------------------------------------------------
-    */
-
-    /**
-     * Apply eager-loaded relationships to the query.
-     *
-     * Supported formats:
-     *
-     * with=checkIns
-     *
-     * with=checkIns,organization
-     *
-     * with[]=checkIns
-     *
-     * with[]=checkIns&with[]=organization
-     */
-    protected function applyWith(
-        Builder $query,
-        array|string|null $with
-    ): Builder {
-        $relations = $this->normalizeWith(
+        $this->applyWith(
+            $query,
             $with
         );
 
-        if (empty($relations)) {
-            return $query;
-        }
-
-        $relations = array_values(
-            array_filter(
-                $relations,
-                fn (string $relation): bool =>
-                    $this->relationExists($relation)
-            )
-        );
-
-        if (! empty($relations)) {
-            $query->with(
-                $relations
-            );
-        }
-
-        return $query;
+        return $query
+            ->where($conditions)
+            ->get();
     }
 
     /**
-     * Normalize relationship input.
-     *
-     * Examples:
-     *
-     * "checkIns"
-     *
-     * becomes:
-     *
-     * [
-     *     "checkIns"
-     * ]
-     *
-     * ---
-     *
-     * "checkIns,organization"
-     *
-     * becomes:
-     *
-     * [
-     *     "checkIns",
-     *     "organization"
-     * ]
-     *
-     * ---
-     *
-     * [
-     *     "checkIns",
-     *     "organization"
-     * ]
-     *
-     * remains an array.
+     * Return the first record matching conditions.
      */
-    protected function normalizeWith(
-        array|string|null $with
-    ): array {
-        if (
-            $with === null ||
-            $with === '' ||
-            $with === []
-        ) {
-            return [];
-        }
+    public function findOneWhere(
+        array $conditions,
+        array|string|null $with = []
+    ): ?Model {
+        $query = $this->newQuery();
 
-        $relations = is_array($with)
-            ? $with
-            : [$with];
-
-        $normalized = [];
-
-        foreach ($relations as $relation) {
-            /**
-             * Ignore malformed array values such as:
-             *
-             * with[foo][]=bar
-             */
-            if (! is_string($relation)) {
-                continue;
-            }
-
-            /**
-             * Also supports:
-             *
-             * with[]=roles,permissions
-             */
-            foreach (
-                explode(',', $relation)
-                as $item
-            ) {
-                $item = trim($item);
-
-                if ($item === '') {
-                    continue;
-                }
-
-                $normalized[] = $item;
-            }
-        }
-
-        return array_values(
-            array_unique(
-                $normalized
-            )
-        );
-    }
-
-    /**
-     * Validate whether a relationship exists on the Model.
-     *
-     * Nested relationships are also supported:
-     *
-     * organization.address
-     * checkIns.triage
-     */
-    protected function relationExists(
-        string $relation
-    ): bool {
-        $segments = explode(
-            '.',
-            $relation
+        $this->applyWith(
+            $query,
+            $with
         );
 
-        $model = $this->model;
-
-        foreach ($segments as $segment) {
-            if (
-                $segment === '' ||
-                ! method_exists($model, $segment)
-            ) {
-                return false;
-            }
-
-            try {
-                $relationship = $model->{$segment}();
-            } catch (\Throwable) {
-                return false;
-            }
-
-            if (! $relationship instanceof Relation) {
-                return false;
-            }
-
-            $model = $relationship->getRelated();
-        }
-
-        return true;
+        return $query
+            ->where($conditions)
+            ->first();
     }
 
     /*
@@ -511,81 +354,51 @@ abstract class AbstractRepository
     */
 
     /**
-     * Apply filters to the query.
+     * Remove technical parameters and empty filters.
      */
-    protected function applyFilters(
-        Builder $query,
+    protected function cleanFilters(
         array $filters
-    ): Builder {
-        foreach ($filters as $field => $value) {
-            if (
-                in_array(
-                    $field,
-                    $this->reservedParameters,
+    ): array {
+        return collect($filters)
+            ->reject(
+                fn (
+                    mixed $value,
+                    string $key
+                ): bool => in_array(
+                    $key,
+                    $this->reservedFilters,
                     true
                 )
-            ) {
-                continue;
-            }
-
-            if (
-                $value === null ||
-                $value === ''
-            ) {
-                continue;
-            }
-
-            /**
-             * Avoid trying to filter using fields that do not
-             * exist in the model table.
-             */
-            if (! $this->columnExists($field)) {
-                continue;
-            }
-
-            if (is_array($value)) {
-                $query->whereIn(
-                    $field,
-                    $value
-                );
-
-                continue;
-            }
-
-            $query->where(
-                $field,
-                $value
-            );
-        }
-
-        return $query;
+            )
+            ->reject(
+                fn (mixed $value): bool =>
+                    $value === null ||
+                    $value === ''
+            )
+            ->all();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Sorting
-    |--------------------------------------------------------------------------
-    */
-
     /**
-     * Apply ordering to the query.
+     * Apply sorting when requested.
      */
-    protected function applySorting(
+    protected function applySort(
         Builder $query,
         array $filters
-    ): Builder {
+    ): void {
         $sort = $filters['sort'] ?? null;
 
         if (
             ! is_string($sort) ||
-            $sort === '' ||
-            ! $this->columnExists($sort)
+            trim($sort) === ''
         ) {
-            return $query;
+            return;
         }
 
         $order = strtolower(
-            (string) ($filters['order'] ?? 'asc')
+            (string) (
+                $filters['order'] ??
+                'asc'
+            )
         );
 
         if (
@@ -602,132 +415,196 @@ abstract class AbstractRepository
             $sort,
             $order
         );
-
-        return $query;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Pagination
-    |--------------------------------------------------------------------------
-    */
-
     /**
-     * Resolve per-page value.
+     * Resolve number of records per page.
      */
     protected function resolvePerPage(
-        array $filters
+        array $filters,
+        int $default
     ): int {
         $perPage = (int) (
             $filters['per_page'] ??
-            $this->perPage
+            $default
         );
 
         if ($perPage <= 0) {
-            return $this->perPage;
+            return $default;
         }
 
         return min(
             $perPage,
-            $this->maxPerPage
+            100
         );
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Public Identifier
+    | Relationships
     |--------------------------------------------------------------------------
     */
 
     /**
-     * Apply internal ID or public hash to a query.
-     *
-     * Numeric identifiers continue using the Model primary key.
-     * Public identifiers use the hash column.
-     *
-     * Examples:
-     *
-     * 15
-     *
-     * PAT_8F3K2Q9X
+     * Apply valid eager-loaded relationships.
      */
-    protected function applyIdentifier(
+    protected function applyWith(
         Builder $query,
-        mixed $identifier
-    ): Builder {
-        if (
-            $this->shouldUsePublicIdentifier(
-                $identifier
+        array|string|null $with
+    ): void {
+        $relations = $this->normalizeWith(
+            $with
+        );
+
+        if (empty($relations)) {
+            return;
+        }
+
+        $relations = array_values(
+            array_filter(
+                $relations,
+                fn (string $relation): bool =>
+                    $this->relationExists($relation)
             )
-        ) {
-            return $query->where(
-                'hash',
-                $identifier
-            );
-        }
-
-        return $query->where(
-            $this->model->getKeyName(),
-            $identifier
         );
+
+        if (! empty($relations)) {
+            $query->with($relations);
+        }
     }
 
     /**
-     * Determine whether an identifier should use the public hash.
+     * Normalize relationships.
+     *
+     * Supports:
+     *
+     * ?with=checkIns
+     *
+     * ?with=checkIns,organization
+     *
+     * ?with[]=checkIns
+     *
+     * ?with[]=checkIns&with[]=organization
+     *
+     * ?with[]=checkIns,organization
      */
-    protected function shouldUsePublicIdentifier(
-        mixed $identifier
-    ): bool {
-        if (! $this->hasHashColumn()) {
-            return false;
-        }
-
-        /**
-         * Integer IDs continue using the primary key.
-         */
-        if (is_int($identifier)) {
-            return false;
-        }
-
-        /**
-         * Numeric strings such as "15" are also considered IDs.
-         */
+    protected function normalizeWith(
+        array|string|null $with
+    ): array {
         if (
-            is_string($identifier) &&
-            ctype_digit($identifier)
+            $with === null ||
+            $with === '' ||
+            $with === []
         ) {
-            return false;
+            return [];
         }
 
-        return is_string($identifier);
+        $values = is_array($with)
+            ? $with
+            : [$with];
+
+        $relations = [];
+
+        foreach ($values as $value) {
+            if (! is_string($value)) {
+                continue;
+            }
+
+            foreach (
+                explode(',', $value)
+                as $relation
+            ) {
+                $relation = trim($relation);
+
+                if ($relation === '') {
+                    continue;
+                }
+
+                $relations[] = $relation;
+            }
+        }
+
+        return array_values(
+            array_unique($relations)
+        );
     }
 
     /**
-     * Determine whether the model table has a hash column.
+     * Determine whether a relationship exists.
+     *
+     * Nested relationships are supported:
+     *
+     * checkIns.triage
+     * organization.users
      */
-    protected function hasHashColumn(): bool
-    {
-        return $this->columnExists(
-            'hash'
+    protected function relationExists(
+        string $relation
+    ): bool {
+        $segments = explode(
+            '.',
+            $relation
         );
+
+        $model = $this->model;
+
+        foreach ($segments as $segment) {
+            if (
+                $segment === '' ||
+                ! method_exists(
+                    $model,
+                    $segment
+                )
+            ) {
+                return false;
+            }
+
+            try {
+                $relationInstance =
+                    $model->{$segment}();
+            } catch (\Throwable) {
+                return false;
+            }
+
+            if (
+                ! $relationInstance
+                    instanceof Relation
+            ) {
+                return false;
+            }
+
+            $model =
+                $relationInstance
+                    ->getRelated();
+        }
+
+        return true;
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Database helpers
+    | Identifiers
     |--------------------------------------------------------------------------
     */
 
     /**
-     * Check whether a column exists on the model table.
+     * Resolve whether the identifier should use
+     * the internal primary key or public hash.
      */
-    protected function columnExists(
-        string $column
-    ): bool {
-        return Schema::hasColumn(
-            $this->model->getTable(),
-            $column
-        );
+    protected function resolveIdentifierField(
+        int|string $id
+    ): string {
+        if (is_int($id)) {
+            return $this->model->getKeyName();
+        }
+
+        if (
+            is_string($id) &&
+            ctype_digit($id)
+        ) {
+            return $this->model->getKeyName();
+        }
+
+        return $this->idField;
     }
 
     /*
@@ -737,7 +614,7 @@ abstract class AbstractRepository
     */
 
     /**
-     * Return repository model.
+     * Return the repository Model instance.
      */
     public function getModel(): Model
     {
