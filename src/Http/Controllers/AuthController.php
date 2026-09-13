@@ -9,18 +9,20 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
     /**
-     * Cached model columns for the current request.
+     * Cache das colunas das tabelas verificadas
+     * durante a requisição atual.
      *
      * @var array<string, array<int, string>>
      */
     private array $columnsCache = [];
 
     /**
-     * Authenticate a user and return a JWT token.
+     * Realiza autenticação e retorna o token JWT.
      */
     public function login(
         LoginRequest $request
@@ -30,10 +32,9 @@ class AuthController extends Controller
         $guard = Auth::guard('api');
 
         /**
-         * Retrieve the user before generating the token.
-         *
-         * This allows us to check the optional "active"
-         * column when it exists.
+         * Recupera o usuário antes do attempt para
+         * verificar funcionalidades opcionais,
+         * como a coluna active.
          */
         $user = $guard
             ->getProvider()
@@ -42,11 +43,11 @@ class AuthController extends Controller
             );
 
         /**
-         * If the model has an "active" column and
-         * the user is inactive, authentication is denied.
+         * Caso exista a coluna active e o usuário
+         * esteja desativado, bloqueia a autenticação.
          *
-         * When the column does not exist, the library
-         * keeps its original behaviour.
+         * Se a coluna não existir, mantém o
+         * comportamento padrão.
          */
         if (
             $user !== null &&
@@ -56,7 +57,7 @@ class AuthController extends Controller
         }
 
         /**
-         * Validate credentials and generate token.
+         * Valida as credenciais e gera o JWT.
          */
         if (
             ! $token = $guard->attempt(
@@ -66,13 +67,11 @@ class AuthController extends Controller
             return $this->unauthorized();
         }
 
-        /**
-         * User successfully authenticated.
-         */
         $authenticatedUser = $guard->user();
 
         /**
-         * Record optional login metadata.
+         * Registra informações do último login
+         * caso as respectivas colunas existam.
          */
         if ($authenticatedUser !== null) {
             $this->recordLogin(
@@ -82,74 +81,88 @@ class AuthController extends Controller
         }
 
         return $this->respondWithToken(
-            $token
+            $token,
+            $authenticatedUser
         );
     }
 
     /**
-     * Return the authenticated user.
+     * Retorna o usuário autenticado.
      */
     public function me(): JsonResponse
     {
-        return response()->json(
-            Auth::guard('api')->user()
-        );
+        return $this->successResponse([
+            'user' => Auth::guard('api')->user(),
+        ]);
     }
 
     /**
-     * Logout and invalidate current token.
+     * Invalida o token atual.
      */
     public function logout(): JsonResponse
     {
         Auth::guard('api')->logout();
 
-        return response()->json([
+        return $this->successResponse([
             'message' => 'Successfully logged out',
         ]);
     }
 
     /**
-     * Refresh JWT token.
+     * Renova o token JWT.
      */
     public function refresh(): JsonResponse
     {
+        $guard = Auth::guard('api');
+
+        $token = $guard->refresh();
+
         return $this->respondWithToken(
-            Auth::guard('api')->refresh()
+            $token,
+            $guard->user()
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | JWT Response
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Build JWT response.
+     * Retorna o token seguindo o padrão
+     * oficial de resposta da biblioteca.
      */
     protected function respondWithToken(
-        string $token
+        string $token,
+        ?Authenticatable $user = null
     ): JsonResponse {
         $guard = Auth::guard('api');
 
-        return response()->json([
+        return $this->successResponse([
             'access_token' => $token,
+
             'token_type' => 'Bearer',
+
             'expires_in' => $guard
                 ->factory()
                 ->getTTL() * 60,
-            'user' => $guard->user(),
+
+            'user' => $user ?? $guard->user(),
         ]);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | User Status
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Determine whether the user is allowed
-     * to authenticate.
+     * Define se o usuário pode se autenticar.
      *
-     * Behaviour:
-     *
-     * active column does not exist:
-     *     true
-     *
-     * active = true:
-     *     true
-     *
-     * active = false:
-     *     false
+     * Se a coluna active não existir, a biblioteca
+     * mantém o comportamento original.
      */
     protected function canAuthenticate(
         Authenticatable $user
@@ -172,9 +185,19 @@ class AuthController extends Controller
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Login Metadata
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Record login metadata when the columns
-     * exist on the authenticated user's table.
+     * Atualiza os dados do último login.
+     *
+     * As colunas são opcionais.
+     *
+     * last_login_at
+     * last_login_ip
      */
     protected function recordLogin(
         Authenticatable $user,
@@ -210,14 +233,14 @@ class AuthController extends Controller
         }
 
         /**
-         * Query Builder is intentionally used here.
+         * Utilizamos Query Builder propositalmente.
          *
-         * Advantages:
+         * Dessa forma:
          *
-         * - does not require $fillable;
-         * - does not trigger Model observers;
-         * - does not touch updated_at;
-         * - works transparently with optional columns.
+         * - não depende de $fillable;
+         * - não dispara Observers;
+         * - não altera updated_at;
+         * - funciona com colunas opcionais.
          */
         $user
             ->getConnection()
@@ -231,8 +254,9 @@ class AuthController extends Controller
             ->update($data);
 
         /**
-         * Keep the current authenticated Model
-         * synchronized with the database values.
+         * Mantém a instância atual sincronizada
+         * para que os valores apareçam imediatamente
+         * no retorno do login.
          */
         foreach ($data as $attribute => $value) {
             $user->setAttribute(
@@ -242,9 +266,14 @@ class AuthController extends Controller
         }
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Schema
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Check whether the user's table contains
-     * a specific column.
+     * Verifica se determinada coluna existe.
      */
     protected function hasColumn(
         Model $user,
@@ -258,22 +287,26 @@ class AuthController extends Controller
     }
 
     /**
-     * Retrieve and cache table columns.
+     * Recupera as colunas da tabela.
      *
-     * Only one schema query is required per table
-     * during the request.
+     * O resultado é armazenado em cache durante
+     * a requisição para evitar múltiplas consultas
+     * ao schema.
      */
     protected function getColumns(
         Model $user
     ): array {
-        $connection =
+        $connectionName =
             $user->getConnectionName()
             ?? 'default';
 
         $table = $user->getTable();
 
-        $cacheKey =
-            $connection . ':' . $table;
+        $cacheKey = sprintf(
+            '%s:%s',
+            $connectionName,
+            $table
+        );
 
         if (
             ! array_key_exists(
@@ -296,11 +329,14 @@ class AuthController extends Controller
         ];
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Boolean
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Normalize boolean database values.
-     *
-     * Supports MySQL, PostgreSQL and
-     * common scalar representations.
+     * Normaliza diferentes representações booleanas.
      */
     protected function normalizeBoolean(
         mixed $value
@@ -332,16 +368,60 @@ class AuthController extends Controller
         return (bool) $value;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Responses
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Unauthorized authentication response.
-     *
-     * The same response is intentionally returned
-     * for invalid credentials and inactive users.
+     * Resposta padrão de sucesso da biblioteca.
+     */
+    protected function successResponse(
+        mixed $data = [],
+        int $status = Response::HTTP_OK
+    ): JsonResponse {
+        return response()->json([
+            'type' => 'success',
+            'status' => $status,
+            'data' => $data,
+        ], $status);
+    }
+
+    /**
+     * Resposta padrão de erro da biblioteca.
+     */
+    protected function errorResponse(
+        string $message,
+        int $status =
+            Response::HTTP_UNPROCESSABLE_ENTITY,
+        array $errors = []
+    ): JsonResponse {
+        $response = [
+            'type' => 'error',
+            'status' => $status,
+            'message' => $message,
+            'show' => true,
+        ];
+
+        if (! empty($errors)) {
+            $response['errors'] = $errors;
+        }
+
+        return response()->json(
+            $response,
+            $status
+        );
+    }
+
+    /**
+     * Resposta utilizada quando a autenticação falha.
      */
     protected function unauthorized(): JsonResponse
     {
-        return response()->json([
-            'message' => 'Unauthorized',
-        ], 401);
+        return $this->errorResponse(
+            'Unauthorized',
+            Response::HTTP_UNAUTHORIZED
+        );
     }
 }
